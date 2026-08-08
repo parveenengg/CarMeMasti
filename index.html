@@ -62,6 +62,11 @@
             <div class="tip-row">
                 <span>🖱 Drag canvas to orbit camera</span>
             </div>
+            <div class="setting-row">
+                <label class="s-label toggle-label">
+                    <input type="checkbox" id="toggle-touch"> SHOW TOUCH CONTROLS
+                </label>
+            </div>
         </div>
     </div>
 
@@ -106,9 +111,9 @@
         <div class="hud-bottom-left">
             <div class="ctrl-row"><kbd>W/S</kbd> Accelerate / Brake</div>
             <div class="ctrl-row"><kbd>A/D</kbd> Steer Left / Right</div>
-            <div class="ctrl-row"><kbd>SPACE</kbd> Handbrake / Drift</div>
+            <div class="ctrl-row"><kbd>SPACE / E</kbd> Jump &amp; Fly (hold)</div>
             <div class="ctrl-row"><kbd>SHIFT</kbd> Nitro Boost</div>
-            <div class="ctrl-row"><kbd>E</kbd> Air Thruster (hold)</div>
+            <div class="ctrl-row"><kbd>Q / CTRL</kbd> Drift / Handbrake</div>
             <div class="ctrl-row"><kbd>C</kbd> Cycle Camera</div>
             <div class="ctrl-row"><kbd>🖱 Drag</kbd> Orbit Camera</div>
         </div>
@@ -149,6 +154,31 @@
             <button id="btn-restart" class="btn-primary">PLAY AGAIN</button>
         </div>
     </div>
+</div>
+
+<!-- ── MOBILE / TABLET TOUCH CONTROLS ── -->
+<!-- always-hidden = user disabled; hidden = game not running -->
+<div id="mobile-controls" class="mobile-ui always-hidden hidden">
+
+    <!-- LEFT: D-pad -->
+    <div class="dpad-zone">
+        <button id="m-fwd"   class="mb mb-fwd">▲<span>GAS</span></button>
+        <div class="dpad-row">
+            <button id="m-left"  class="mb mb-left">◄</button>
+            <button id="m-bwd"   class="mb mb-bwd">▼<span>BRK</span></button>
+            <button id="m-right" class="mb mb-right">►</button>
+        </div>
+    </div>
+
+    <!-- RIGHT: Action buttons -->
+    <div class="action-zone">
+        <div class="action-top">
+            <button id="m-nitro" class="mb mb-nitro">⚡<span>NITRO</span></button>
+            <button id="m-drift" class="mb mb-drift">💨<span>DRIFT</span></button>
+        </div>
+        <button id="m-jump" class="mb mb-jump">🚀<span>JUMP / FLY</span></button>
+    </div>
+
 </div>
 
 <script src="game.js"></script>

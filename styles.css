@@ -370,3 +370,147 @@ kbd {
     font-family: 'Orbitron', sans-serif;
     color: #00f0ff;
 }
+
+/* Settings toggle label */
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: rgba(0,240,255,0.8);
+}
+.toggle-label input { accent-color: #ff0080; cursor: pointer; }
+
+/* ═══════════════════════════════════════════
+   MOBILE / TABLET TOUCH CONTROLS
+═══════════════════════════════════════════ */
+.mobile-ui {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 30;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 16px 20px 24px;
+    pointer-events: auto;
+    /* Prevent accidental page scroll on mobile */
+    touch-action: none;
+}
+/* always-hidden: toggled off by user; hidden: game not active */
+.mobile-ui.always-hidden { display: none !important; }
+.mobile-ui.hidden        { display: none !important; }
+
+/* ─── D-pad (left side) ─── */
+.dpad-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+.dpad-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ─── Action buttons (right side) ─── */
+.action-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+.action-top {
+    display: flex;
+    gap: 8px;
+}
+
+/* ─── Base mobile button ─── */
+.mb {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(0,240,255,0.45);
+    border-radius: 14px;
+    background: rgba(5, 8, 22, 0.78);
+    backdrop-filter: blur(12px);
+    color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 0 14px rgba(0,240,255,0.18);
+    transition: background 0.08s, box-shadow 0.08s, transform 0.08s;
+    /* Prevent text selection during touch */
+    user-select: none;
+}
+.mb span {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: rgba(0,240,255,0.85);
+    margin-top: 2px;
+}
+.mb.active, .mb:active {
+    background: rgba(0,240,255,0.22);
+    box-shadow: 0 0 24px rgba(0,240,255,0.55);
+    transform: scale(0.93);
+    border-color: #00f0ff;
+}
+
+/* D-pad directional buttons — medium square */
+.mb-fwd, .mb-bwd, .mb-left, .mb-right {
+    width: 68px; height: 68px;
+}
+/* Left/Right arrows — narrower */
+.mb-left, .mb-right { width: 58px; font-size: 26px; }
+
+/* JUMP button — large, prominent, cyan-to-magenta */
+.mb-jump {
+    width: 110px; height: 90px;
+    font-size: 30px;
+    border-color: rgba(255,0,128,0.6);
+    box-shadow: 0 0 20px rgba(255,0,128,0.3);
+    background: rgba(14, 4, 28, 0.82);
+}
+.mb-jump span { color: #ff0080; }
+.mb-jump.active, .mb-jump:active {
+    background: rgba(255, 0, 128, 0.22);
+    box-shadow: 0 0 32px rgba(255,0,128,0.7);
+    border-color: #ff0080;
+}
+
+/* NITRO button — cyan accent */
+.mb-nitro {
+    width: 72px; height: 68px;
+    border-color: rgba(0,220,255,0.55);
+}
+.mb-nitro.active, .mb-nitro:active {
+    background: rgba(0,220,255,0.2);
+    box-shadow: 0 0 24px rgba(0,220,255,0.6);
+    border-color: #00dcff;
+}
+
+/* DRIFT button — orange accent */
+.mb-drift {
+    width: 72px; height: 68px;
+    border-color: rgba(255,140,0,0.55);
+}
+.mb-drift span { color: #ffa500; }
+.mb-drift.active, .mb-drift:active {
+    background: rgba(255,140,0,0.18);
+    box-shadow: 0 0 24px rgba(255,140,0,0.6);
+    border-color: #ffa500;
+}
+
+/* ─── Responsive: smaller screens ─── */
+@media (max-width: 480px) {
+    .mb-fwd, .mb-bwd { width: 58px; height: 58px; font-size: 18px; }
+    .mb-left, .mb-right { width: 50px; height: 58px; font-size: 20px; }
+    .mb-jump  { width: 90px;  height: 76px; font-size: 24px; }
+    .mb-nitro, .mb-drift { width: 62px; height: 58px; }
+    .mobile-ui { padding: 10px 14px 18px; }
+}
+

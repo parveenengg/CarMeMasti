@@ -560,7 +560,11 @@ class GameEngine {
                 case 'KeyS':case 'ArrowDown':  this.input.bwd    = val; break;
                 case 'KeyA':case 'ArrowLeft':  this.input.left   = val; break;
                 case 'KeyD':case 'ArrowRight': this.input.right  = val; break;
-                case 'Space':                  this.input.drift  = val; break;
+                // SPACE = jump / air thruster
+                case 'Space':                  this.input.thrust = val; break;
+                case 'KeyQ':
+                case 'ControlLeft':
+                case 'ControlRight':           this.input.drift  = val; break;
                 case 'ShiftLeft':
                 case 'ShiftRight':             this.input.nitro  = val; break;
                 case 'KeyE':case 'KeyF':       this.input.thrust = val; break;
@@ -642,6 +646,64 @@ class GameEngine {
         document.getElementById('ctrl-method').addEventListener('change', e => {
             this._ctrl = e.target.value;
         });
+
+        // Auto-show mobile controls on touch devices
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+            document.getElementById('mobile-controls').classList.remove('always-hidden');
+        }
+
+        // "Show touch controls" setting toggle
+        document.getElementById('toggle-touch').addEventListener('change', e => {
+            const mc = document.getElementById('mobile-controls');
+            if (e.target.checked) mc.classList.remove('always-hidden');
+            else                  mc.classList.add('always-hidden');
+        });
+
+        this._bindMobileControls();
+    }
+
+    // ── MOBILE / TABLET ON-SCREEN CONTROLS ─────────────────
+    _bindMobileControls() {
+        const mc = document.getElementById('mobile-controls');
+
+        // Map button-id → which input flag to set
+        const btnMap = {
+            'm-fwd':   'fwd',
+            'm-bwd':   'bwd',
+            'm-left':  'left',
+            'm-right': 'right',
+            'm-jump':  'thrust',
+            'm-nitro': 'nitro',
+            'm-drift': 'drift'
+        };
+
+        Object.entries(btnMap).forEach(([id, flag]) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+
+            const down = e => {
+                e.preventDefault();
+                this.audio.init();
+                this.input[flag] = true;
+                el.classList.add('active');
+            };
+            const up = e => {
+                e.preventDefault();
+                this.input[flag] = false;
+                el.classList.remove('active');
+            };
+
+            el.addEventListener('touchstart', down, { passive: false });
+            el.addEventListener('touchend',   up,   { passive: false });
+            el.addEventListener('touchcancel',up,   { passive: false });
+            // Also mouse for testing on desktop
+            el.addEventListener('mousedown',  down);
+            el.addEventListener('mouseup',    up);
+            el.addEventListener('mouseleave', up);
+        });
+
+        // Camera drag on the canvas must NOT fire when touching control buttons
+        // (already handled since control buttons call preventDefault)
     }
 
     // ── GAME STATE ─────────────────────────────────────────
@@ -669,6 +731,9 @@ class GameEngine {
         document.getElementById('start-screen').classList.add('hidden');
         document.getElementById('game-over-screen').classList.add('hidden');
         document.getElementById('hud').classList.remove('hidden');
+        // Show mobile controls during play
+        const mc = document.getElementById('mobile-controls');
+        if (!mc.classList.contains('always-hidden')) mc.classList.remove('hidden');
     }
 
     _gameOver() {
@@ -681,6 +746,7 @@ class GameEngine {
         document.getElementById('final-coins').innerText = this.coins;
         document.getElementById('hud').classList.add('hidden');
         document.getElementById('game-over-screen').classList.remove('hidden');
+        document.getElementById('mobile-controls').classList.add('hidden');
 
         // Shake effect
         if (window.gsap) {
