@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Drive 3D – Open World Racer</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body>
+<div id="game-container">
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- ── ALWAYS-VISIBLE SETTINGS PANEL (top-right) ── -->
+    <div id="settings-panel">
+        <button id="settings-toggle" title="Settings">⚙</button>
+        <div id="settings-drawer" class="hidden">
+            <h3>⚙ SETTINGS</h3>
+
+            <div class="setting-row">
+                <span class="s-label">CONTROLS</span>
+                <select id="ctrl-method">
+                    <option value="both">WASD + Arrows</option>
+                    <option value="wasd">WASD Only</option>
+                    <option value="arrows">Arrows Only</option>
+                </select>
+            </div>
+
+            <div class="setting-row">
+                <span class="s-label">ENGINE SOUND</span>
+                <select id="engine-type">
+                    <option value="v8">🔥 V8 Muscle</option>
+                    <option value="electric">⚡ Electric</option>
+                    <option value="diesel">🚛 Diesel Truck</option>
+                    <option value="rocket">🚀 Rocket</option>
+                </select>
+            </div>
+
+            <div class="setting-row">
+                <span class="s-label">ENGINE VOL <span id="eng-vol-lbl">80%</span></span>
+                <input type="range" id="sl-engine" min="0" max="100" value="80">
+            </div>
+
+            <div class="setting-row">
+                <span class="s-label">SFX VOL <span id="sfx-vol-lbl">90%</span></span>
+                <input type="range" id="sl-sfx" min="0" max="100" value="90">
+            </div>
+
+            <div class="setting-row">
+                <span class="s-label">CAMERA VIEW</span>
+                <select id="cam-select">
+                    <option value="0">Chase (Dynamic)</option>
+                    <option value="1">Close Follow</option>
+                    <option value="2">Top-Down</option>
+                </select>
+            </div>
+
+            <div class="tip-row">
+                <span>🖱 Drag canvas to orbit camera</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── HUD (in-game) ── -->
+    <div id="hud" class="hud-layer hidden">
+        <!-- Top Stats -->
+        <div class="hud-top">
+            <div class="stat-box">
+                <span class="stat-label">SCORE</span>
+                <span id="score-val" class="stat-value">000000</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">GEMS</span>
+                <span id="coin-val" class="stat-value">💎 0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">DISTANCE</span>
+                <span id="dist-val" class="stat-value">0.00 km</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">ALTITUDE</span>
+                <span id="alt-val" class="stat-value">0 m</span>
+            </div>
+        </div>
+
+        <!-- Bottom-right: Speedometer + Nitro -->
+        <div class="hud-bottom-right">
+            <div class="gauge-circle">
+                <span id="speed-val" class="speed-num">0</span>
+                <span class="speed-unit">KM/H</span>
+                <span class="gear-lbl">GEAR <span id="gear-val">1</span></span>
+            </div>
+            <div class="nitro-wrap">
+                <div class="nitro-label">NITRO [SHIFT]</div>
+                <div class="nitro-track">
+                    <div id="nitro-fill" class="nitro-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom-left: Controls -->
+        <div class="hud-bottom-left">
+            <div class="ctrl-row"><kbd>W/S</kbd> Accelerate / Brake</div>
+            <div class="ctrl-row"><kbd>A/D</kbd> Steer Left / Right</div>
+            <div class="ctrl-row"><kbd>SPACE</kbd> Handbrake / Drift</div>
+            <div class="ctrl-row"><kbd>SHIFT</kbd> Nitro Boost</div>
+            <div class="ctrl-row"><kbd>E</kbd> Air Thruster (hold)</div>
+            <div class="ctrl-row"><kbd>C</kbd> Cycle Camera</div>
+            <div class="ctrl-row"><kbd>🖱 Drag</kbd> Orbit Camera</div>
+        </div>
+    </div>
+
+    <!-- ── START SCREEN ── -->
+    <div id="start-screen" class="overlay-screen">
+        <div class="glass-card main-menu">
+            <h1 class="game-title">CYBER<span class="accent">DRIVE</span></h1>
+            <p class="subtitle">OPEN WORLD · SYNTHWAVE RACER</p>
+
+            <div class="vehicle-badge">
+                <div class="badge-tag">VEHICLE READY</div>
+                <div class="vehicle-name">APEX NEON GT</div>
+                <div class="vehicle-sub">Twin-Turbo · 950 HP · Air Thruster</div>
+            </div>
+
+            <div class="menu-actions">
+                <button id="btn-start" class="btn-primary">DRIVE NOW</button>
+            </div>
+
+            <div class="how-to-play">
+                <h4>HOW TO PLAY</h4>
+                <p>Free-roam open world. Collect blue gems, avoid red cars, hit SHIFT for Nitro, hold E to fire the air thruster and fly! Drag to orbit your camera. Reach for the mountains!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── GAME OVER ── -->
+    <div id="game-over-screen" class="overlay-screen hidden">
+        <div class="glass-card modal-card">
+            <h2 class="crash-title">CRASHED!</h2>
+            <div class="final-stats">
+                <div class="final-row"><span>FINAL SCORE</span> <strong id="final-score">0</strong></div>
+                <div class="final-row"><span>DISTANCE</span>    <strong id="final-dist">0.00 km</strong></div>
+                <div class="final-row"><span>GEMS</span>        <strong id="final-coins">0</strong></div>
+            </div>
+            <button id="btn-restart" class="btn-primary">PLAY AGAIN</button>
+        </div>
+    </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
