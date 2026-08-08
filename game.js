@@ -729,15 +729,24 @@ class GameEngine {
         this.vy    = THREE.MathUtils.clamp(this.vy, -55, 32);
         this.carY += this.vy * dt;
 
-        if (this.carY <= 0) {
+        // ── TERRAIN HEIGHT at current position ──
+        const groundY = this._terrainH(this.carX, this.carZ);
+
+        if (this.carY <= groundY) {
             if (this.vy < -6) this.audio.playLand();
-            this.carY = 0; this.vy = 0; this.airborne = false;
+            this.carY = groundY; this.vy = 0; this.airborne = false;
         } else {
             this.airborne = true;
         }
 
         // ── DRIVE — Acceleration / Braking ──
         if (!this.airborne) {
+            // Slope gravity: sample height ahead and behind the car
+            const fX0 = Math.sin(this.heading), fZ0 = Math.cos(this.heading);
+            const hAhead  = this._terrainH(this.carX + fX0 * 2.5, this.carZ + fZ0 * 2.5);
+            const hBehind = this._terrainH(this.carX - fX0 * 2.5, this.carZ - fZ0 * 2.5);
+            const slopeGrav = (hAhead - hBehind) * 1.8; // positive = uphill ahead
+
             if (this.input.fwd) {
                 this.speed += this.ACCEL * (this.isNitro ? 2.0 : 1.0) * dt;
             } else if (this.input.bwd) {
@@ -748,6 +757,9 @@ class GameEngine {
                 if (Math.abs(this.speed) < fr * dt) this.speed = 0;
                 else this.speed -= Math.sign(this.speed) * fr * dt;
             }
+
+            // Apply slope drag/assist (uphill slows, downhill speeds naturally)
+            this.speed -= slopeGrav * dt * Math.sign(this.speed || 1);
             this.speed = THREE.MathUtils.clamp(this.speed, -22, topSpd);
         }
 
@@ -784,12 +796,22 @@ class GameEngine {
         this.carGroup.position.set(this.carX, this.carY, this.carZ);
         this.carGroup.rotation.y = this.heading;
 
-        // Body lean into corner
-        this.carGroup.rotation.z = THREE.MathUtils.lerp(
-            this.carGroup.rotation.z, -this.steer * sRatio * 0.09, dt * 7);
+        // Terrain slope for body tilt
+        const norm    = this._terrainNormal(this.carX, this.carZ);
+        const fwdV    = new THREE.Vector3(Math.sin(this.heading), 0, Math.cos(this.heading));
+        const rightV  = new THREE.Vector3(Math.cos(this.heading), 0, -Math.sin(this.heading));
+        // Project normal onto car's local axes
+        const terrainPitch = -norm.dot(fwdV)  * 0.85;  // nose up on downhill, down on uphill
+        const terrainRoll  =  norm.dot(rightV) * 0.85;  // lean into cross-slope
 
-        // Suspension pitch
-        const ptgt = this.input.fwd ? -0.038 : (this.input.bwd ? 0.062 : 0);
+        // Body lean into corner + terrain cross-slope
+        const rollTgt = (-this.steer * sRatio * 0.09) + (this.airborne ? 0 : terrainRoll);
+        this.carGroup.rotation.z = THREE.MathUtils.lerp(
+            this.carGroup.rotation.z, rollTgt, dt * 6);
+
+        // Suspension pitch + terrain forward slope
+        const accelPitch = this.input.fwd ? -0.038 : (this.input.bwd ? 0.062 : 0);
+        const ptgt = accelPitch + (this.airborne ? 0 : terrainPitch);
         this.carGroup.rotation.x = THREE.MathUtils.lerp(
             this.carGroup.rotation.x, ptgt, dt * 6);
 
@@ -902,6 +924,40 @@ class GameEngine {
         const fovTgt = this.isNitro ? 84 : (close ? 80 : 65);
         this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, fovTgt, dt*5);
         this.camera.updateProjectionMatrix();
+    }
+
+    // ── TERRAIN HEIGHT SAMPLER ─────────────────────────────
+    // Mirrors the exact formula used in _buildTerrain() so the
+    // car can query ground height at any (x, z) at runtime.
+    _terrainH(x, z) {
+        const r  = Math.sqrt(x * x + z * z);
+        let   y  = 0;
+
+        if (r > 260) {
+            const mt = Math.min((r - 260) / 220, 1.0);
+            const n  = Math.sin(x * 0.033) * Math.cos(z * 0.028)
+                     + Math.sin(x * 0.068 + 1.7) * Math.cos(z * 0.060 - 0.8) * 0.55
+                     + Math.sin(x * 0.14  - 2.5) * Math.cos(z * 0.13  + 1.4) * 0.28
+                     + Math.sin(x * 0.28  + 0.4) * Math.cos(z * 0.25  - 0.6) * 0.12;
+            y = Math.max(0, mt * 155 * (0.4 + n * 0.6));
+        }
+
+        if (r < 240 && y === 0) {
+            y = Math.max(0, Math.sin(x * 0.08) * Math.cos(z * 0.09) * 1.5);
+        }
+
+        return y;
+    }
+
+    // Returns the up-normal of the terrain at (x,z) using finite differences
+    _terrainNormal(x, z) {
+        const e  = 1.5;
+        const hL = this._terrainH(x - e, z);
+        const hR = this._terrainH(x + e, z);
+        const hF = this._terrainH(x, z - e);
+        const hB = this._terrainH(x, z + e);
+        // dh/dx and dh/dz give the slope; normal = cross of tangent vectors
+        return new THREE.Vector3(hL - hR, 2 * e, hF - hB).normalize();
     }
 
     // ── MAIN LOOP ──────────────────────────────────────────
