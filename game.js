@@ -121,7 +121,7 @@ class GameEngine {
         this.WHEELBASE= 2.5;
         this.GRAVITY  = -24;
         this.THRUST   = 36;
-        this.BOUND    = 245;    // playable boundary
+        this.BOUND    = 490;    // playable boundary
 
         // Nitro
         this.nitro    = 100;
@@ -269,7 +269,8 @@ class GameEngine {
 
     // ── TERRAIN (ground + procedural mountains + rivers) ───
     _buildTerrain() {
-        const SIZE = 1400, SEG = 180;
+        // Use more segments for a bigger, richer terrain
+        const SIZE = 2200, SEG = 220;
         const geo  = new THREE.PlaneGeometry(SIZE, SIZE, SEG, SEG);
         geo.rotateX(-Math.PI / 2);
 
@@ -279,62 +280,49 @@ class GameEngine {
         for (let i = 0; i < pos.count; i++) {
             const x = pos.getX(i);
             const z = pos.getZ(i);
-            const r = Math.sqrt(x * x + z * z);
-
-            let y = 0;
-
-            // Mountains start rising past r=270
-            if (r > 260) {
-                const mt = Math.min((r - 260) / 220, 1.0);
-                // Multi-octave pseudo-noise for natural peaks
-                const n = Math.sin(x * 0.033) * Math.cos(z * 0.028)
-                        + Math.sin(x * 0.068 + 1.7) * Math.cos(z * 0.060 - 0.8) * 0.55
-                        + Math.sin(x * 0.14  - 2.5) * Math.cos(z * 0.13  + 1.4) * 0.28
-                        + Math.sin(x * 0.28  + 0.4) * Math.cos(z * 0.25  - 0.6) * 0.12;
-                y = Math.max(0, mt * 155 * (0.4 + n * 0.6));
-            }
-
-            // Small lumps inside play area for character
-            if (r < 240 && y === 0) {
-                y = Math.max(0,
-                    Math.sin(x * 0.08) * Math.cos(z * 0.09) * 1.5
-                );
-            }
-
+            // Use the shared height sampler so terrain & physics always match
+            const y = this._terrainH(x, z);
             pos.setY(i, y);
 
-            // Vertex color by height
-            if (y < 0.5) {
-                // Flat ground — dark purple with subtle grid tint
-                const gv = (Math.sin(x * 0.04) + Math.cos(z * 0.04)) * 0.015;
-                cols.push(0.04 + gv, 0.01, 0.10 + gv * 2);
-            } else if (y < 45) {
-                const t2 = y / 45;
-                cols.push(0.10 + t2*0.08, 0.04 + t2*0.04, 0.18 + t2*0.10);
-            } else if (y < 95) {
-                const t2 = (y - 45) / 50;
-                cols.push(0.18 + t2*0.16, 0.08 + t2*0.10, 0.28 + t2*0.06);
+            // ── Vertex colour by zone ──
+            if (y < 0.8) {
+                // Flat paved zone — dark neon purple with faint grid shimmer
+                const gv = (Math.sin(x * 0.025) + Math.cos(z * 0.025)) * 0.012;
+                cols.push(0.05 + gv, 0.01, 0.13 + gv * 2);
+            } else if (y < 12) {
+                // Offroad entry — dusty brown-purple dirt
+                const t2 = y / 12;
+                cols.push(0.22 + t2*0.08, 0.10 + t2*0.04, 0.14 + t2*0.04);
+            } else if (y < 32) {
+                // Offroad hills — reddish-brown rock
+                const t2 = (y - 12) / 20;
+                cols.push(0.30 + t2*0.10, 0.12 + t2*0.06, 0.10 + t2*0.04);
+            } else if (y < 80) {
+                // Mountain lower face — dark grey-purple rock
+                const t2 = (y - 32) / 48;
+                cols.push(0.22 + t2*0.10, 0.10 + t2*0.08, 0.26 + t2*0.08);
+            } else if (y < 130) {
+                // Mountain upper — cooler grey
+                const t2 = (y - 80) / 50;
+                cols.push(0.32 + t2*0.18, 0.18 + t2*0.15, 0.34 + t2*0.12);
             } else {
                 // Snow caps
-                const t2 = Math.min((y - 95) / 40, 1.0);
-                cols.push(0.34 + t2*0.66, 0.18 + t2*0.82, 0.34 + t2*0.66);
+                const t2 = Math.min((y - 130) / 40, 1.0);
+                cols.push(0.50 + t2*0.50, 0.33 + t2*0.67, 0.46 + t2*0.54);
             }
         }
 
         geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(cols), 3));
         geo.computeVertexNormals();
 
-        const mat = new THREE.MeshStandardMaterial({
-            vertexColors: true, roughness: 0.88, metalness: 0.04
-        });
-
-        const terrain = new THREE.Mesh(geo, mat);
+        const terrain = new THREE.Mesh(geo,
+            new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.88, metalness:0.05 }));
         terrain.receiveShadow = true;
         this.scene.add(terrain);
 
-        // Neon grid overlay on playable area
-        const grid = new THREE.GridHelper(500, 50, 0xff0080, 0x330022);
-        grid.position.y = 0.06;
+        // Neon grid on flat central zone only (r < 170)
+        const grid = new THREE.GridHelper(340, 34, 0xff0080, 0x330022);
+        grid.position.y = 0.07;
         this.scene.add(grid);
 
         // Boundary neon fence
@@ -342,52 +330,59 @@ class GameEngine {
             color: 0xff0080, emissive: 0xff0080, emissiveIntensity: 0.75,
             transparent: true, opacity: 0.60
         });
-        const fH = 7, fB = this.BOUND + 2;
+        const fH = 8, fB = this.BOUND + 2;
         [
-            [new THREE.BoxGeometry(fB*2+4, fH, 1.2), [0,      fH/2, -fB]],
-            [new THREE.BoxGeometry(fB*2+4, fH, 1.2), [0,      fH/2,  fB]],
-            [new THREE.BoxGeometry(1.2, fH, fB*2+4), [-fB,    fH/2,  0 ]],
-            [new THREE.BoxGeometry(1.2, fH, fB*2+4), [ fB,    fH/2,  0 ]],
+            [new THREE.BoxGeometry(fB*2+4, fH, 1.5), [0,      fH/2, -fB]],
+            [new THREE.BoxGeometry(fB*2+4, fH, 1.5), [0,      fH/2,  fB]],
+            [new THREE.BoxGeometry(1.5, fH, fB*2+4), [-fB,    fH/2,  0 ]],
+            [new THREE.BoxGeometry(1.5, fH, fB*2+4), [ fB,    fH/2,  0 ]],
         ].forEach(([g, p]) => {
             const m = new THREE.Mesh(g, fMat);
             m.position.set(...p);
             this.scene.add(m);
         });
 
-        // Rivers (shallow semi-transparent water)
+        // Rivers
         this._buildRivers();
     }
 
     _buildRivers() {
         const rMat = new THREE.MeshStandardMaterial({
-            color: 0x0055cc, transparent: true, opacity: 0.70,
-            roughness: 0.0, metalness: 0.65,
-            emissive: 0x001155, emissiveIntensity: 0.45
+            color: 0x0066dd, transparent: true, opacity: 0.72,
+            roughness: 0.0, metalness: 0.70,
+            emissive: 0x001166, emissiveIntensity: 0.50
         });
 
-        // River A — north/south strip
-        const rA = new THREE.Mesh(new THREE.PlaneGeometry(16, 490, 1, 1), rMat);
+        // River A — long N/S through flat & offroad zones
+        const rA = new THREE.Mesh(new THREE.PlaneGeometry(20, 900, 1, 1), rMat);
         rA.rotation.x = -Math.PI / 2;
-        rA.position.set(-115, 0.07, 0);
+        rA.position.set(-180, 0.07, 0);
         this.scene.add(rA);
 
-        // River B — east/west strip
-        const rB = new THREE.Mesh(new THREE.PlaneGeometry(490, 13, 1, 1), rMat);
+        // River B — wide E/W crossing
+        const rB = new THREE.Mesh(new THREE.PlaneGeometry(900, 18, 1, 1), rMat);
         rB.rotation.x = -Math.PI / 2;
-        rB.position.set(0, 0.07, 85);
+        rB.position.set(0, 0.07, 145);
         this.scene.add(rB);
 
-        // River C — diagonal
-        const rC = new THREE.Mesh(new THREE.PlaneGeometry(13, 420, 1, 1), rMat);
+        // River C — diagonal offroad creek
+        const rC = new THREE.Mesh(new THREE.PlaneGeometry(16, 680, 1, 1), rMat);
         rC.rotation.x = -Math.PI / 2;
-        rC.rotation.z = Math.PI / 5;
-        rC.position.set(145, 0.07, -60);
+        rC.rotation.z = Math.PI / 6;
+        rC.position.set(240, 0.07, -100);
         this.scene.add(rC);
 
-        // Ambient glow lights along rivers
-        [[-115,0], [0,85], [145,-60]].forEach(([x, z]) => {
-            const l = new THREE.PointLight(0x0088ff, 2.0, 45);
-            l.position.set(x, 3, z);
+        // River D — short curved creek in offroad zone
+        const rD = new THREE.Mesh(new THREE.PlaneGeometry(14, 500, 1, 1), rMat);
+        rD.rotation.x = -Math.PI / 2;
+        rD.rotation.z = -Math.PI / 4;
+        rD.position.set(-300, 0.07, 200);
+        this.scene.add(rD);
+
+        // Ambient glow lights
+        [[-180,0,3], [0,145,3], [240,-100,3], [-300,200,3]].forEach(([x,z,y]) => {
+            const l = new THREE.PointLight(0x0099ff, 2.2, 55);
+            l.position.set(x, y, z);
             this.scene.add(l);
             this.bankLights.push(l);
         });
@@ -767,8 +762,8 @@ class GameEngine {
         // A / ArrowLeft  → turn left  → heading decreases
         // D / ArrowRight → turn right → heading increases
         let si = 0;
-        if (this.input.left)  si = -1;
-        if (this.input.right) si =  1;
+        if (this.input.left)  si =  1;   // heading increases = turn left (A)
+        if (this.input.right) si = -1;   // heading decreases = turn right (D)
 
         const sRatio = Math.abs(this.speed) / this.MAX_SPD;
         const sAngle = this.STEER_MX * (1.0 - sRatio * 0.52);
@@ -927,26 +922,47 @@ class GameEngine {
     }
 
     // ── TERRAIN HEIGHT SAMPLER ─────────────────────────────
-    // Mirrors the exact formula used in _buildTerrain() so the
-    // car can query ground height at any (x, z) at runtime.
+    // Single source of truth used by BOTH _buildTerrain() and the
+    // real-time physics so the mesh and collision always match exactly.
+    //
+    // ZONES (by radius from centre):
+    //   0  – 160  → perfectly flat paved area (racing)
+    //   160 – 420 → offroad rolling hills (8–30 m tall)
+    //   420+      → tall mountain ring (up to 180 m)
     _terrainH(x, z) {
         const r  = Math.sqrt(x * x + z * z);
         let   y  = 0;
 
-        if (r > 260) {
-            const mt = Math.min((r - 260) / 220, 1.0);
-            const n  = Math.sin(x * 0.033) * Math.cos(z * 0.028)
-                     + Math.sin(x * 0.068 + 1.7) * Math.cos(z * 0.060 - 0.8) * 0.55
-                     + Math.sin(x * 0.14  - 2.5) * Math.cos(z * 0.13  + 1.4) * 0.28
-                     + Math.sin(x * 0.28  + 0.4) * Math.cos(z * 0.25  - 0.6) * 0.12;
-            y = Math.max(0, mt * 155 * (0.4 + n * 0.6));
+        // ── Offroad hills zone (r: 160 – 440) ──
+        if (r > 160) {
+            const t  = Math.min((r - 160) / 260, 1.0);
+            // smoothstep so the flat zone blends in gently
+            const st = t * t * (3.0 - 2.0 * t);
+
+            // 4-octave hills — ample amplitude for real bumps
+            const hills =
+                  Math.sin(x * 0.032 + 1.1) * Math.cos(z * 0.028 - 0.9) * 22
+                + Math.sin(x * 0.065 - 0.4) * Math.cos(z * 0.060 + 1.6) * 13
+                + Math.sin(x * 0.130 + 2.2) * Math.cos(z * 0.120 - 0.2) * 7
+                + Math.sin(x * 0.260 - 1.3) * Math.cos(z * 0.250 + 0.8) * 3.5;
+
+            // Bias positive so hills are almost always above flat ground
+            y = st * Math.max(0, hills + 14);
         }
 
-        if (r < 240 && y === 0) {
-            y = Math.max(0, Math.sin(x * 0.08) * Math.cos(z * 0.09) * 1.5);
+        // ── Mountain ring (r > 400) layered on top ──
+        if (r > 400) {
+            const mt  = Math.min((r - 400) / 220, 1.0);
+            const mst = mt * mt * (3.0 - 2.0 * mt);
+            const n   = Math.sin(x * 0.030) * Math.cos(z * 0.026)
+                      + Math.sin(x * 0.062 + 1.7) * Math.cos(z * 0.055 - 0.8) * 0.55
+                      + Math.sin(x * 0.125 - 2.5) * Math.cos(z * 0.118 + 1.4) * 0.28
+                      + Math.sin(x * 0.250 + 0.4) * Math.cos(z * 0.238 - 0.6) * 0.12;
+            const mH  = Math.max(0, mst * 180 * (0.38 + n * 0.62));
+            y = Math.max(y, mH);
         }
 
-        return y;
+        return Math.max(0, y);
     }
 
     // Returns the up-normal of the terrain at (x,z) using finite differences
