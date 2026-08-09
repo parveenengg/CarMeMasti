@@ -616,9 +616,32 @@ class GameEngine {
             lTY = e.touches[0].clientY;
         }, { passive: true });
 
-        // ── UI Buttons ──
-        document.getElementById('btn-start').addEventListener('click',   () => this._startGame());
-        document.getElementById('btn-restart').addEventListener('click', () => this._startGame());
+        // ── UI Buttons & Fullscreen ──
+        const startFn = (e) => {
+            this._requestFullscreen();
+            this._startGame();
+        };
+
+        const btnStart   = document.getElementById('btn-start');
+        const btnRestart = document.getElementById('btn-restart');
+        const btnFs      = document.getElementById('fullscreen-btn');
+
+        if (btnStart) {
+            btnStart.addEventListener('touchstart', startFn, { passive: false });
+            btnStart.addEventListener('click', startFn);
+        }
+        if (btnRestart) {
+            btnRestart.addEventListener('touchstart', startFn, { passive: false });
+            btnRestart.addEventListener('click', startFn);
+        }
+        if (btnFs) {
+            const toggleFn = (e) => {
+                if (e) e.preventDefault();
+                this.toggleFullscreen();
+            };
+            btnFs.addEventListener('touchstart', toggleFn, { passive: false });
+            btnFs.addEventListener('click', toggleFn);
+        }
 
         // Settings panel
         const tog = document.getElementById('settings-toggle');
@@ -823,12 +846,37 @@ class GameEngine {
 
     _requestFullscreen() {
         const elem = document.documentElement;
+        try {
+            window.scrollTo(0, 1);
+        } catch(e) {}
+
         if (elem.requestFullscreen) {
             elem.requestFullscreen().catch(() => {});
         } else if (elem.webkitRequestFullscreen) {
             elem.webkitRequestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+            elem.mozRequestFullScreen();
         } else if (elem.msRequestFullscreen) {
             elem.msRequestFullscreen();
+        }
+
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(() => {});
+        }
+    }
+
+    toggleFullscreen() {
+        const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+        if (!isFs) {
+            this._requestFullscreen();
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            }
         }
     }
 
