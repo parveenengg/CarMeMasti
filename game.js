@@ -168,7 +168,7 @@ class GameEngine {
     // ── THREE.JS SETUP ─────────────────────────────────────
     _initThree() {
         this.scene = new THREE.Scene();
-        this.scene.fog = new THREE.FogExp2(0x0d041a, 0.0024);
+        this.scene.fog = new THREE.FogExp2(0xd8f0ff, 0.0018);
 
         this.camera = new THREE.PerspectiveCamera(65, innerWidth/innerHeight, 0.1, 1600);
 
@@ -178,24 +178,27 @@ class GameEngine {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
 
-        this.scene.add(new THREE.AmbientLight(0xcc55ff, 0.55));
+        // Bright natural ambient lighting
+        this.scene.add(new THREE.AmbientLight(0xd0f4ff, 0.75));
 
-        const sun = new THREE.DirectionalLight(0xff99cc, 1.1);
-        sun.position.set(100, 120, 100);
+        // Warm golden sunlight
+        const sun = new THREE.DirectionalLight(0xfffaee, 1.35);
+        sun.position.set(120, 160, 100);
         sun.castShadow = true;
         sun.shadow.camera.near   = 1;
-        sun.shadow.camera.far    = 900;
-        const sc = 310;
+        sun.shadow.camera.far    = 950;
+        const sc = 340;
         sun.shadow.camera.left   = -sc; sun.shadow.camera.right = sc;
         sun.shadow.camera.top    =  sc; sun.shadow.camera.bottom= -sc;
         sun.shadow.mapSize.set(2048, 2048);
         this.scene.add(sun);
 
-        this.scene.add(new THREE.DirectionalLight(0x0044ff, 0.38).position.set(-100, 40, -100));
+        // Sky bounce light
+        this.scene.add(new THREE.DirectionalLight(0x70c0ff, 0.45).position.set(-100, 50, -100));
 
         // Headlights (follow car)
-        this.hlL = new THREE.SpotLight(0x99ddff, 3.5, 95, Math.PI/10, 0.5);
-        this.hlR = new THREE.SpotLight(0x99ddff, 3.5, 95, Math.PI/10, 0.5);
+        this.hlL = new THREE.SpotLight(0xffffff, 3.5, 95, Math.PI/10, 0.5);
+        this.hlR = new THREE.SpotLight(0xffffff, 3.5, 95, Math.PI/10, 0.5);
         this.scene.add(this.hlL, this.hlR, this.hlL.target, this.hlR.target);
 
         window.addEventListener('resize', () => {
@@ -207,7 +210,6 @@ class GameEngine {
 
     // ── SKY DOME (sunset gradient) ─────────────────────────
     _buildSky() {
-        // Full sky sphere — shader creates smooth sunset gradient
         const skyGeo = new THREE.SphereGeometry(900, 32, 20);
         const skyMat = new THREE.ShaderMaterial({
             side: THREE.BackSide,
@@ -223,51 +225,37 @@ class GameEngine {
                 varying float vH;
                 void main(){
                     float t = clamp(vH, 0.0, 1.0);
-                    // horizon=warm orange, mid=pink-magenta, zenith=deep indigo
-                    vec3 horizon = vec3(0.96, 0.30, 0.02);
-                    vec3 mid     = vec3(0.55, 0.05, 0.52);
-                    vec3 zenith  = vec3(0.04, 0.01, 0.22);
-                    vec3 c = mix(horizon, mid, smoothstep(0.0, 0.28, t));
-                    c      = mix(c, zenith, smoothstep(0.18, 1.0, t));
+                    vec3 horizon = vec3(0.72, 0.88, 0.98);
+                    vec3 mid     = vec3(0.38, 0.68, 0.98);
+                    vec3 zenith  = vec3(0.15, 0.45, 0.85);
+                    vec3 c = mix(horizon, mid, smoothstep(0.0, 0.35, t));
+                    c      = mix(c, zenith, smoothstep(0.25, 1.0, t));
                     gl_FragColor = vec4(c, 1.0);
                 }`
         });
         this.scene.add(new THREE.Mesh(skyGeo, skyMat));
 
-        // Retro synthwave sun disc (striped horizon disc)
-        const sunGeo = new THREE.CircleGeometry(72, 64);
-        const sunMat = new THREE.ShaderMaterial({
-            side: THREE.DoubleSide, depthWrite: false, fog: false,
-            vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-            fragmentShader:`
-                varying vec2 vUv;
-                void main(){
-                    float y     = vUv.y;
-                    float lines = step(0.5, fract(y * 22.0));
-                    vec3 top    = vec3(1.0, 0.12, 0.65);
-                    vec3 bot    = vec3(1.0, 0.52, 0.0);
-                    vec3 col    = mix(bot, top, y);
-                    col *= mix(0.78, 1.0, lines * (1.0 - y * 0.65));
-                    gl_FragColor = vec4(col, 1.0);
-                }`
-        });
+        // Radiant Golden Sun
+        const sunGeo = new THREE.CircleGeometry(65, 48);
+        const sunMat = new THREE.MeshBasicMaterial({ color: 0xfffa66, fog: false, side: THREE.DoubleSide });
         const sunMesh = new THREE.Mesh(sunGeo, sunMat);
-        sunMesh.position.set(0, 30, -750);
+        sunMesh.position.set(120, 150, -750);
         this.scene.add(sunMesh);
 
-        // Stars (randomised points)
-        const N = 2200, sPos = new Float32Array(N * 3);
-        for (let i = 0; i < N * 3; i += 3) {
-            const th = Math.random() * Math.PI * 2;
-            const ph = Math.random() * Math.PI * 0.5;  // upper hemisphere
-            const r  = 750 + Math.random() * 50;
-            sPos[i]   = r * Math.sin(ph) * Math.cos(th);
-            sPos[i+1] = r * Math.cos(ph);
-            sPos[i+2] = r * Math.sin(ph) * Math.sin(th);
+        // Fluffy procedural clouds
+        const cloudGeo = new THREE.DodecahedronGeometry(18);
+        const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, transparent: true, opacity: 0.88, fog: false });
+        for (let i = 0; i < 35; i++) {
+            const cg = new THREE.Group();
+            for (let j = 0; j < 5; j++) {
+                const cm = new THREE.Mesh(cloudGeo, cloudMat);
+                cm.position.set((j-2)*12 + Math.random()*4, Math.random()*6, Math.random()*6);
+                cm.scale.setScalar(0.8 + Math.random()*0.6);
+                cg.add(cm);
+            }
+            cg.position.set((Math.random()-0.5)*1400, 140 + Math.random()*60, (Math.random()-0.5)*1400);
+            this.scene.add(cg);
         }
-        const sGeo = new THREE.BufferGeometry();
-        sGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
-        this.scene.add(new THREE.Points(sGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.9, fog: false })));
     }
 
     // ── TERRAIN (ground + procedural mountains + rivers) ───
@@ -289,29 +277,29 @@ class GameEngine {
 
             // ── Vertex colour by zone ──
             if (y < 0.8) {
-                // Flat paved zone — dark neon purple with faint grid shimmer
-                const gv = (Math.sin(x * 0.025) + Math.cos(z * 0.025)) * 0.012;
-                cols.push(0.05 + gv, 0.01, 0.13 + gv * 2);
+                // Lush meadow green
+                const gv = (Math.sin(x * 0.02) + Math.cos(z * 0.02)) * 0.02;
+                cols.push(0.20 + gv, 0.62 + gv*2, 0.28 + gv);
             } else if (y < 12) {
-                // Offroad entry — dusty brown-purple dirt
+                // Offroad entry — emerald grass
                 const t2 = y / 12;
-                cols.push(0.22 + t2*0.08, 0.10 + t2*0.04, 0.14 + t2*0.04);
+                cols.push(0.18 + t2*0.04, 0.54 + t2*0.08, 0.22 + t2*0.04);
             } else if (y < 32) {
-                // Offroad hills — reddish-brown rock
+                // Offroad hills — deep forest green & moss
                 const t2 = (y - 12) / 20;
-                cols.push(0.30 + t2*0.10, 0.12 + t2*0.06, 0.10 + t2*0.04);
+                cols.push(0.14 + t2*0.10, 0.44 + t2*0.06, 0.18 + t2*0.04);
             } else if (y < 80) {
-                // Mountain lower face — dark grey-purple rock
+                // Mountain rock
                 const t2 = (y - 32) / 48;
-                cols.push(0.22 + t2*0.10, 0.10 + t2*0.08, 0.26 + t2*0.08);
+                cols.push(0.35 + t2*0.10, 0.38 + t2*0.08, 0.38 + t2*0.08);
             } else if (y < 130) {
-                // Mountain upper — cooler grey
+                // Mountain upper cool stone
                 const t2 = (y - 80) / 50;
-                cols.push(0.32 + t2*0.18, 0.18 + t2*0.15, 0.34 + t2*0.12);
+                cols.push(0.45 + t2*0.18, 0.48 + t2*0.15, 0.50 + t2*0.12);
             } else {
                 // Snow caps
                 const t2 = Math.min((y - 130) / 40, 1.0);
-                cols.push(0.50 + t2*0.50, 0.33 + t2*0.67, 0.46 + t2*0.54);
+                cols.push(0.92 + t2*0.08, 0.95 + t2*0.05, 0.98 + t2*0.02);
             }
         }
 
@@ -319,41 +307,73 @@ class GameEngine {
         geo.computeVertexNormals();
 
         const terrain = new THREE.Mesh(geo,
-            new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.88, metalness:0.05 }));
+            new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.85, metalness:0.02 }));
         terrain.receiveShadow = true;
         this.scene.add(terrain);
 
-        // Neon grid on flat central zone only (r < 170)
-        const grid = new THREE.GridHelper(340, 34, 0xff0080, 0x330022);
-        grid.position.y = 0.07;
-        this.scene.add(grid);
-
-        // Boundary neon fence
-        const fMat = new THREE.MeshStandardMaterial({
-            color: 0xff0080, emissive: 0xff0080, emissiveIntensity: 0.75,
-            transparent: true, opacity: 0.60
-        });
-        const fH = 8, fB = this.BOUND + 2;
+        // Boundary stone markers
+        const bMat = new THREE.MeshStandardMaterial({ color: 0x557766, roughness: 0.9 });
+        const fH = 5, fB = this.BOUND + 2;
         [
-            [new THREE.BoxGeometry(fB*2+4, fH, 1.5), [0,      fH/2, -fB]],
-            [new THREE.BoxGeometry(fB*2+4, fH, 1.5), [0,      fH/2,  fB]],
-            [new THREE.BoxGeometry(1.5, fH, fB*2+4), [-fB,    fH/2,  0 ]],
-            [new THREE.BoxGeometry(1.5, fH, fB*2+4), [ fB,    fH/2,  0 ]],
+            [new THREE.BoxGeometry(fB*2+4, fH, 1.5), [0, fH/2, -fB]],
+            [new THREE.BoxGeometry(fB*2+4, fH, 1.5), [0, fH/2,  fB]],
+            [new THREE.BoxGeometry(1.5, fH, fB*2+4), [-fB, fH/2, 0 ]],
+            [new THREE.BoxGeometry(1.5, fH, fB*2+4), [ fB, fH/2, 0 ]],
         ].forEach(([g, p]) => {
-            const m = new THREE.Mesh(g, fMat);
+            const m = new THREE.Mesh(g, bMat);
             m.position.set(...p);
             this.scene.add(m);
         });
 
-        // Rivers
+        // Plant lush trees across the landscape!
+        this._spawnTrees();
         this._buildRivers();
+    }
+
+    _spawnTrees() {
+        const trunkGeo   = new THREE.CylinderGeometry(0.35, 0.55, 3.2, 8);
+        const trunkMat   = new THREE.MeshStandardMaterial({ color: 0x5d4037, roughness: 0.9 });
+        const foliageGeo = new THREE.ConeGeometry(2.4, 6.0, 8);
+        const foliageMat = new THREE.MeshStandardMaterial({ color: 0x2e7d32, roughness: 0.6, metalness: 0.1 });
+
+        for (let i = 0; i < 150; i++) {
+            const [x, z] = this._rndPos(30);
+            if (Math.hypot(x, z) < 25) continue; // Keep spawn area open
+
+            const y = this._terrainH(x, z);
+            if (y > 90) continue; // Don't spawn high in snow mountain peaks
+
+            const treeGroup = new THREE.Group();
+            
+            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+            trunk.position.y = 1.6;
+            trunk.castShadow = true;
+            treeGroup.add(trunk);
+
+            const f1 = new THREE.Mesh(foliageGeo, foliageMat);
+            f1.position.y = 4.2;
+            f1.castShadow = true;
+            treeGroup.add(f1);
+
+            const f2 = new THREE.Mesh(foliageGeo, foliageMat);
+            f2.position.y = 6.2;
+            f2.scale.set(0.72, 0.72, 0.72);
+            f2.castShadow = true;
+            treeGroup.add(f2);
+
+            const scale = 0.8 + Math.random() * 0.65;
+            treeGroup.scale.set(scale, scale, scale);
+            treeGroup.position.set(x, y, z);
+            treeGroup.rotation.y = Math.random() * Math.PI * 2;
+            this.scene.add(treeGroup);
+        }
     }
 
     _buildRivers() {
         const rMat = new THREE.MeshStandardMaterial({
-            color: 0x0066dd, transparent: true, opacity: 0.72,
-            roughness: 0.0, metalness: 0.70,
-            emissive: 0x001166, emissiveIntensity: 0.50
+            color: 0x0099ff, transparent: true, opacity: 0.80,
+            roughness: 0.1, metalness: 0.20,
+            emissive: 0x0033aa, emissiveIntensity: 0.25
         });
 
         // River A — long N/S through flat & offroad zones
@@ -395,46 +415,46 @@ class GameEngine {
     _buildCar() {
         this.carGroup = new THREE.Group();
 
-        // Body
+        // Metallic Emerald Body
         this.carGroup.add(this._mesh(
             new THREE.BoxGeometry(2.2, 0.78, 4.4),
-            { color:0x0e1225, metalness:0.95, roughness:0.04 },
+            { color:0x0f2b1d, metalness:0.85, roughness:0.15 },
             [0, 0.62, 0], true
         ));
 
-        // Cabin glass
+        // Crystal Sky Cabin glass
         this.carGroup.add(this._mesh(
             new THREE.BoxGeometry(1.72, 0.55, 2.1),
-            { color:0x00cfff, transparent:true, opacity:0.45, roughness:0 },
+            { color:0x80deea, transparent:true, opacity:0.45, roughness:0 },
             [0, 1.12, -0.1]
         ));
 
-        // Rear spoiler
+        // Rear spoiler with emerald accent
         this.carGroup.add(this._mesh(
             new THREE.BoxGeometry(2.05, 0.46, 0.22),
-            { color:0xff0080, emissive:0xff0080, emissiveIntensity:0.6 },
+            { color:0x00e676, emissive:0x00c853, emissiveIntensity:0.6 },
             [0, 1.18, -2.05]
         ));
 
         // Hood accent stripe
         this.carGroup.add(this._mesh(
             new THREE.BoxGeometry(2.2, 0.10, 1.6),
-            { color:0x00cfff, emissive:0x00cfff, emissiveIntensity:0.28 },
+            { color:0x00e676, emissive:0x00c853, emissiveIntensity:0.28 },
             [0, 1.02, 1.6]
         ));
 
-        // Side skirt neon strips (left & right)
+        // Side skirt glow strips
         [-1.12, 1.12].forEach(xp => {
             this.carGroup.add(this._mesh(
                 new THREE.BoxGeometry(0.1, 0.14, 3.8),
-                { color:0x00f0ff, emissive:0x00f0ff, emissiveIntensity:0.8 },
+                { color:0x00e676, emissive:0x00e676, emissiveIntensity:0.8 },
                 [xp, 0.26, 0]
             ));
         });
 
         // Headlights
         const hlGeo = new THREE.BoxGeometry(0.55, 0.18, 0.12);
-        const hlMat = new THREE.MeshBasicMaterial({ color: 0xaaffff });
+        const hlMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
         [-0.72, 0.72].forEach(xp => {
             const hl = new THREE.Mesh(hlGeo, hlMat);
             hl.position.set(xp, 0.68, 2.22);
@@ -442,24 +462,24 @@ class GameEngine {
         });
 
         // Tail lights
-        const tlMat = new THREE.MeshBasicMaterial({ color: 0xff0044 });
+        const tlMat = new THREE.MeshBasicMaterial({ color: 0xff3344 });
         [-0.72, 0.72].forEach(xp => {
             const tl = new THREE.Mesh(hlGeo, tlMat);
             tl.position.set(xp, 0.68, -2.22);
             this.carGroup.add(tl);
         });
 
-        // Underglow
-        this.underGlow = new THREE.PointLight(0x00cfff, 2.4, 9);
+        // Emerald Underglow
+        this.underGlow = new THREE.PointLight(0x00e676, 2.2, 9);
         this.underGlow.position.set(0, 0.1, 0);
         this.carGroup.add(this.underGlow);
 
         // Wheels (4x)
         this.wheels = [];
         const wGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.36, 20);
-        const wMat = new THREE.MeshStandardMaterial({ color: 0x040408, roughness: 0.8 });
+        const wMat = new THREE.MeshStandardMaterial({ color: 0x1a2420, roughness: 0.8 });
         const rGeo = new THREE.BoxGeometry(0.09, 0.36, 0.65);
-        const rMat = new THREE.MeshBasicMaterial({ color: 0x00cfff });
+        const rMat = new THREE.MeshBasicMaterial({ color: 0x00e676 });
 
         [{x:-1.16, z: 1.45, front:true },
          {x: 1.16, z: 1.45, front:true },
@@ -477,7 +497,7 @@ class GameEngine {
 
         // Nitro exhaust flame
         const nGeo = new THREE.ConeGeometry(0.38, 2.2, 12);
-        const nMat = new THREE.MeshBasicMaterial({ color: 0x0088ff, transparent: true, opacity: 0.88 });
+        const nMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.88 });
         this.nitroFlame = new THREE.Mesh(nGeo, nMat);
         this.nitroFlame.rotation.x = Math.PI / 2;
         this.nitroFlame.position.set(0, 0.5, -3.0);
@@ -488,9 +508,9 @@ class GameEngine {
         this.thrusterFlames = [];
         [[-.7,-.7],[.7,-.7],[-.7,.7],[.7,.7]].forEach(([tx, tz]) => {
             const tGeo = new THREE.ConeGeometry(0.18, 1.4, 8);
-            const tMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.9 });
+            const tMat = new THREE.MeshBasicMaterial({ color: 0xffea00, transparent: true, opacity: 0.9 });
             const tf = new THREE.Mesh(tGeo, tMat);
-            tf.rotation.x = -Math.PI;           // point downward
+            tf.rotation.x = -Math.PI;
             tf.position.set(tx, 0.0, tz);
             tf.visible = false;
             this.carGroup.add(tf);
@@ -519,17 +539,23 @@ class GameEngine {
     }
 
     _spawnObstacle() {
-        const cols = [0xcc2222, 0xff7700, 0xccaa00, 0x226622, 0x882299];
-        const m = new THREE.Mesh(
-            new THREE.BoxGeometry(2.3, 1.4, 4.0),
-            new THREE.MeshStandardMaterial({
-                color: cols[Math.floor(Math.random()*cols.length)],
-                roughness: 0.35, metalness: 0.70
-            })
-        );
+        const isCrate = Math.random() > 0.5;
+        let m;
+        if (isCrate) {
+            m = new THREE.Mesh(
+                new THREE.BoxGeometry(2.2, 2.2, 2.2),
+                new THREE.MeshStandardMaterial({ color: 0x8d6e63, roughness: 0.8, metalness: 0.1 })
+            );
+        } else {
+            m = new THREE.Mesh(
+                new THREE.DodecahedronGeometry(1.8),
+                new THREE.MeshStandardMaterial({ color: 0x78909c, roughness: 0.95, metalness: 0.1 })
+            );
+        }
         const [x, z] = this._rndPos();
-        m.position.set(x, 0.7, z);
-        m.rotation.y = Math.random() * Math.PI * 2;
+        const y = this._terrainH(x, z);
+        m.position.set(x, y + 1.1, z);
+        m.rotation.set(Math.random(), Math.random(), Math.random());
         m.castShadow = true;
         this.scene.add(m);
         this.obstacles.push(m);
@@ -537,14 +563,15 @@ class GameEngine {
 
     _spawnGem() {
         const m = new THREE.Mesh(
-            new THREE.OctahedronGeometry(0.72),
+            new THREE.OctahedronGeometry(0.85),
             new THREE.MeshStandardMaterial({
-                color: 0x00f0ff, emissive: 0x00f0ff,
-                emissiveIntensity: 1.2, roughness: 0.0
+                color: 0x00e676, emissive: 0x00c853,
+                emissiveIntensity: 1.2, roughness: 0.1, metalness: 0.3
             })
         );
         const [x, z] = this._rndPos();
-        m.position.set(x, 1.4, z);
+        const y = this._terrainH(x, z);
+        m.position.set(x, y + 1.6, z);
         this.scene.add(m);
         this.gems.push(m);
     }
