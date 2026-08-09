@@ -128,8 +128,8 @@ class GameEngine {
         this.isNitro  = false;
         this.airborne = false;
 
-        // Coins
-        this.coins = 0;
+        // Score
+        this.score = 0; this.coins = 0; this.distance = 0;
 
         // Input
         this.input = { fwd:false, bwd:false, left:false, right:false,
@@ -530,7 +530,7 @@ class GameEngine {
     // ── ENTITY SPAWNING ────────────────────────────────────
     _spawnEntities() {
         for (let i = 0; i < 14; i++) this._spawnObstacle();
-        for (let i = 0; i < 24; i++) this._spawnGem();
+        for (let i = 0; i < 36; i++) this._spawnCoin();
     }
 
     _rndPos(margin = 20) {
@@ -561,24 +561,20 @@ class GameEngine {
         this.obstacles.push(m);
     }
 
-    _spawnGem() {
-        const coinGroup = new THREE.Group();
-        const m = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.85, 0.85, 0.18, 20),
-            new THREE.MeshStandardMaterial({
-                color: 0xffea00, metalness: 0.92, roughness: 0.15,
-                emissive: 0xffaa00, emissiveIntensity: 0.35
-            })
-        );
-        m.rotation.x = Math.PI / 2;
-        m.castShadow = true;
-        coinGroup.add(m);
-
-        const [x, z] = this._rndPos();
+    _spawnCoin() {
+        const cGeo = new THREE.CylinderGeometry(0.75, 0.75, 0.16, 24);
+        cGeo.rotateX(Math.PI / 2);
+        const cMat = new THREE.MeshStandardMaterial({
+            color: 0xffd700, roughness: 0.2, metalness: 0.9,
+            emissive: 0xffa000, emissiveIntensity: 0.35
+        });
+        const m = new THREE.Mesh(cGeo, cMat);
+        const [x, z] = this._rndPos(30);
         const y = this._terrainH(x, z);
-        coinGroup.position.set(x, y + 1.2, z);
-        this.scene.add(coinGroup);
-        this.gems.push(coinGroup);
+        m.position.set(x, y + 1.0, z);
+        m.castShadow = true;
+        this.scene.add(m);
+        this.gems.push(m);
     }
 
     // ── EVENTS ─────────────────────────────────────────────
@@ -595,14 +591,19 @@ class GameEngine {
                 case 'KeyS':case 'ArrowDown':  this.input.bwd    = val; break;
                 case 'KeyA':case 'ArrowLeft':  this.input.left   = val; break;
                 case 'KeyD':case 'ArrowRight': this.input.right  = val; break;
-                // SPACE = jump / air thruster
-                case 'Space':                  this.input.thrust = val; break;
+                case 'Space':
+                    if (val && !this.input.thrust) this._doJump();
+                    this.input.thrust = val;
+                    break;
                 case 'KeyQ':
                 case 'ControlLeft':
                 case 'ControlRight':           this.input.drift  = val; break;
                 case 'ShiftLeft':
                 case 'ShiftRight':             this.input.nitro  = val; break;
-                case 'KeyE':case 'KeyF':       this.input.thrust = val; break;
+                case 'KeyE':case 'KeyF':case 'KeyJ':
+                    if (val && key === 'KeyJ') this._doJump();
+                    this.input.thrust = val;
+                    break;
             }
         };
 
@@ -648,8 +649,9 @@ class GameEngine {
             lTY = e.touches[0].clientY;
         }, { passive: true });
 
-        // ── UI Buttons & Fullscreen ──
+        // ── UI Buttons & Menu ──
         const startFn = (e) => {
+            if (e) e.preventDefault();
             this._requestFullscreen();
             this._startGame();
         };
@@ -657,7 +659,7 @@ class GameEngine {
         const btnStart   = document.getElementById('btn-start');
         const btnRestart = document.getElementById('btn-restart');
         const btnFs      = document.getElementById('fullscreen-btn');
-        const menuBtn    = document.getElementById('menu-btn');
+        const btnMenu    = document.getElementById('menu-btn');
 
         if (btnStart) {
             btnStart.addEventListener('touchstart', startFn, { passive: false });
@@ -675,15 +677,13 @@ class GameEngine {
             btnFs.addEventListener('touchstart', toggleFn, { passive: false });
             btnFs.addEventListener('click', toggleFn);
         }
-        if (menuBtn) {
-            const openMenu = (e) => {
+        if (btnMenu) {
+            const menuFn = (e) => {
                 if (e) e.preventDefault();
-                this.state = 'MENU';
-                document.getElementById('start-screen').classList.remove('hidden');
-                document.getElementById('hud').classList.add('hidden');
+                this._toggleMenu();
             };
-            menuBtn.addEventListener('touchstart', openMenu, { passive: false });
-            menuBtn.addEventListener('click', openMenu);
+            btnMenu.addEventListener('touchstart', menuFn, { passive: false });
+            btnMenu.addEventListener('click', menuFn);
         }
 
         // Settings panel
@@ -695,8 +695,8 @@ class GameEngine {
                 drw.classList.toggle('hidden');
             });
             document.addEventListener('click', e => {
-                const sp = document.getElementById('hud-top-right') || document.getElementById('settings-panel');
-                if (sp && !sp.contains(e.target)) drw.classList.add('hidden');
+                if (!document.getElementById('settings-panel').contains(e.target))
+                    drw.classList.add('hidden');
             });
         }
 
@@ -721,52 +721,44 @@ class GameEngine {
         this._bindMobileControls();
     }
 
-    // ── MOBILE / TABLET / ACTION CONTROLS ─────────────────
+    // ── MOBILE / TABLET ON-SCREEN CONTROLS ─────────────────
     _bindMobileControls() {
-        const nitroBtn = document.getElementById('m-nitro');
-        const jumpBtn  = document.getElementById('m-jump');
-        const flyBtn   = document.getElementById('m-fly');
-
-        if (nitroBtn) {
-            const down = e => { e.preventDefault(); this.audio.init(); this.input.nitro = true; nitroBtn.classList.add('active'); };
-            const up   = e => { e.preventDefault(); this.input.nitro = false; nitroBtn.classList.remove('active'); };
-            nitroBtn.addEventListener('touchstart', down, { passive: false });
-            nitroBtn.addEventListener('touchend',   up,   { passive: false });
-            nitroBtn.addEventListener('touchcancel',up,   { passive: false });
-            nitroBtn.addEventListener('mousedown',  down);
-            nitroBtn.addEventListener('mouseup',    up);
-            nitroBtn.addEventListener('mouseleave', up);
+        // NITRO button
+        const mNitro = document.getElementById('m-nitro');
+        if (mNitro) {
+            const downN = e => { e.preventDefault(); this.audio.init(); this.input.nitro = true; mNitro.classList.add('active'); };
+            const upN   = e => { e.preventDefault(); this.input.nitro = false; mNitro.classList.remove('active'); };
+            mNitro.addEventListener('touchstart', downN, { passive: false });
+            mNitro.addEventListener('touchend',   upN,   { passive: false });
+            mNitro.addEventListener('touchcancel',upN,   { passive: false });
+            mNitro.addEventListener('mousedown',  downN);
+            mNitro.addEventListener('mouseup',    upN);
+            mNitro.addEventListener('mouseleave', upN);
         }
 
-        if (jumpBtn) {
-            const down = e => {
-                e.preventDefault(); this.audio.init();
-                jumpBtn.classList.add('active');
-                const groundY = this._terrainH(this.carX, this.carZ);
-                if (this.carY <= groundY + 0.6) {
-                    this.vy = 24;
-                    this.audio.playLand();
-                }
-                this.input.thrust = true;
-            };
-            const up = e => { e.preventDefault(); this.input.thrust = false; jumpBtn.classList.remove('active'); };
-            jumpBtn.addEventListener('touchstart', down, { passive: false });
-            jumpBtn.addEventListener('touchend',   up,   { passive: false });
-            jumpBtn.addEventListener('touchcancel',up,   { passive: false });
-            jumpBtn.addEventListener('mousedown',  down);
-            jumpBtn.addEventListener('mouseup',    up);
-            jumpBtn.addEventListener('mouseleave', up);
+        // JUMP button
+        const mJump = document.getElementById('m-jump');
+        if (mJump) {
+            const downJ = e => { e.preventDefault(); this._doJump(); mJump.classList.add('active'); };
+            const upJ   = e => { e.preventDefault(); mJump.classList.remove('active'); };
+            mJump.addEventListener('touchstart', downJ, { passive: false });
+            mJump.addEventListener('touchend',   upJ,   { passive: false });
+            mJump.addEventListener('touchcancel',upJ,   { passive: false });
+            mJump.addEventListener('mousedown',  downJ);
+            mJump.addEventListener('mouseup',    upJ);
         }
 
-        if (flyBtn) {
-            const down = e => { e.preventDefault(); this.audio.init(); this.input.thrust = true; flyBtn.classList.add('active'); };
-            const up   = e => { e.preventDefault(); this.input.thrust = false; flyBtn.classList.remove('active'); };
-            flyBtn.addEventListener('touchstart', down, { passive: false });
-            flyBtn.addEventListener('touchend',   up,   { passive: false });
-            flyBtn.addEventListener('touchcancel',up,   { passive: false });
-            flyBtn.addEventListener('mousedown',  down);
-            flyBtn.addEventListener('mouseup',    up);
-            flyBtn.addEventListener('mouseleave', up);
+        // FLY button
+        const mFly = document.getElementById('m-fly');
+        if (mFly) {
+            const downF = e => { e.preventDefault(); this.audio.init(); this.input.thrust = true; mFly.classList.add('active'); };
+            const upF   = e => { e.preventDefault(); this.input.thrust = false; mFly.classList.remove('active'); };
+            mFly.addEventListener('touchstart', downF, { passive: false });
+            mFly.addEventListener('touchend',   upF,   { passive: false });
+            mFly.addEventListener('touchcancel',upF,   { passive: false });
+            mFly.addEventListener('mousedown',  downF);
+            mFly.addEventListener('mouseup',    upF);
+            mFly.addEventListener('mouseleave', upF);
         }
 
         // ── VIRTUAL JOYSTICK BINDING ──
@@ -928,6 +920,28 @@ class GameEngine {
         }
     }
 
+    _doJump() {
+        this.audio.init();
+        const groundY = this._terrainH(this.carX, this.carZ);
+        if (this.carY <= groundY + 1.2) {
+            this.vy = 26; // Vertical jump impulse
+            this.airborne = true;
+            this.audio.playLand();
+        }
+    }
+
+    _toggleMenu() {
+        const startScreen = document.getElementById('start-screen');
+        if (startScreen.classList.contains('hidden')) {
+            startScreen.classList.remove('hidden');
+            document.getElementById('hud').classList.add('hidden');
+            document.getElementById('mobile-controls').classList.add('hidden');
+            this.state = 'MENU';
+        } else {
+            this._startGame();
+        }
+    }
+
     // ── GAME STATE ─────────────────────────────────────────
     _startGame() {
         this.audio.init();
@@ -951,12 +965,10 @@ class GameEngine {
         this.obstacles = []; this.gems = [];
         this._spawnEntities();
 
-        const coinEl = document.getElementById('coin-val');
-        if (coinEl) coinEl.innerText = '0';
-
         document.getElementById('start-screen').classList.add('hidden');
         document.getElementById('game-over-screen').classList.add('hidden');
         document.getElementById('hud').classList.remove('hidden');
+        document.getElementById('mobile-controls').classList.remove('hidden');
     }
 
     _gameOver() {
@@ -964,11 +976,10 @@ class GameEngine {
         this.audio.playCrash();
         this.speed = 0; this.vy = 0;
 
-        const finalCoinsEl = document.getElementById('final-coins');
-        if (finalCoinsEl) finalCoinsEl.innerText = this.coins;
-
+        document.getElementById('final-coins').innerText = this.coins;
         document.getElementById('hud').classList.add('hidden');
         document.getElementById('game-over-screen').classList.remove('hidden');
+        document.getElementById('mobile-controls').classList.add('hidden');
 
         // Shake effect
         if (window.gsap) {
@@ -1128,20 +1139,19 @@ class GameEngine {
             if (Math.sqrt(dx*dx + dz*dz) < 2.85) { this._gameOver(); return; }
         }
 
-        // ── 3D GOLD COIN PICKUPS ──
+        // ── GOLDEN COINS COLLECTION ──
         for (const g of this.gems) {
             g.rotation.y += dt * 3.2;
+            g.position.y  = this._terrainH(g.position.x, g.position.z) + 1.0 + Math.sin(Date.now()*0.003 + g.position.x)*0.22;
             const dx = this.carX - g.position.x;
             const dy = this.carY - g.position.y;
             const dz = this.carZ - g.position.z;
             if (Math.sqrt(dx*dx + dy*dy + dz*dz) < 2.5) {
                 this.coins++;
                 this.audio.playPickup();
-                const [nx, nz] = this._rndPos();
+                const [nx, nz] = this._rndPos(30);
                 const ny = this._terrainH(nx, nz);
-                g.position.set(nx, ny + 1.2, nz);
-                const coinEl = document.getElementById('coin-val');
-                if (coinEl) coinEl.innerText = this.coins;
+                g.position.set(nx, ny + 1.0, nz);
             }
         }
 
@@ -1154,12 +1164,10 @@ class GameEngine {
         // ── AUDIO ──
         this.audio.updateEngine(Math.abs(this.speed) / this.MAX_SPD, this.input.fwd);
 
-        // ── HUD UPDATE ──
+        // ── HUD UPDATES (Clean & Unobtrusive) ──
         const kmh = Math.abs(this.speed) * 3.6;
-        const spdEl = document.getElementById('speed-val');
-        if (spdEl) spdEl.innerText = Math.floor(kmh);
-        const coinEl = document.getElementById('coin-val');
-        if (coinEl) coinEl.innerText = this.coins;
+        document.getElementById('speed-val').innerText = Math.floor(kmh);
+        document.getElementById('coin-val').innerText  = this.coins;
     }
 
     // ── CAMERA UPDATE ───────────────────────────────────────

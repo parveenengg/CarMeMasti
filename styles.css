@@ -26,46 +26,55 @@ body, html {
 #bg-canvas:active { cursor: grabbing; }
 
 /* ═══════════════════════════════════════════
-   SETTINGS PANEL — fixed top-right
+   TOP NAVIGATION BUTTONS (Top-Left & Top-Right)
 ═══════════════════════════════════════════ */
+#top-left-panel {
+    position: fixed;
+    top: max(16px, env(safe-area-inset-top));
+    left: max(16px, env(safe-area-inset-left));
+    z-index: 50;
+}
+
 #settings-panel {
     position: fixed;
-    top: 18px;
-    right: 18px;
+    top: max(16px, env(safe-area-inset-top));
+    right: max(16px, env(safe-area-inset-right));
     z-index: 50;
     display: flex;
     align-items: flex-start;
-    gap: 8px;
+    gap: 10px;
 }
 
-#fullscreen-btn, #settings-toggle {
-    width: 44px; height: 44px;
+.top-circle-btn {
+    width: 48px; height: 48px;
     border-radius: 50%;
-    border: 2px solid rgba(0,240,255,0.55);
-    background: rgba(8,12,28,0.85);
-    backdrop-filter: blur(10px);
-    color: #00f0ff;
-    font-size: 20px;
+    border: 1.5px solid rgba(255, 255, 255, 0.22);
+    background: rgba(16, 24, 20, 0.78);
+    backdrop-filter: blur(14px);
+    color: #ffffff;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 0 14px rgba(0,240,255,0.25);
+    transition: all 0.18s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     display: flex; align-items: center; justify-content: center;
     -webkit-tap-highlight-color: transparent;
+    outline: none;
 }
-#fullscreen-btn:hover, #settings-toggle:hover {
-    background: rgba(0,240,255,0.25);
-    box-shadow: 0 0 22px rgba(0,240,255,0.65);
+.top-circle-btn:hover, .top-circle-btn:active {
+    background: rgba(0, 230, 118, 0.28);
+    border-color: #00e676;
+    color: #00e676;
     transform: scale(1.08);
+    box-shadow: 0 0 20px rgba(0, 230, 118, 0.5);
 }
 
 #settings-drawer {
-    background: rgba(8, 10, 22, 0.92);
-    backdrop-filter: blur(18px);
-    border: 1px solid rgba(0,240,255,0.35);
-    border-radius: 12px;
+    background: rgba(12, 24, 18, 0.94);
+    backdrop-filter: blur(20px);
+    border: 1.5px solid rgba(0, 230, 118, 0.4);
+    border-radius: 14px;
     padding: 18px 20px;
     min-width: 240px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 20px rgba(0,240,255,0.12);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.6), 0 0 24px rgba(0, 230, 118, 0.2);
     display: flex;
     flex-direction: column;
     gap: 14px;
@@ -74,8 +83,8 @@ body, html {
     font-family: 'Orbitron', sans-serif;
     font-size: 13px;
     letter-spacing: 2px;
-    color: #00f0ff;
-    border-bottom: 1px solid rgba(0,240,255,0.2);
+    color: #00e676;
+    border-bottom: 1px solid rgba(0, 230, 118, 0.2);
     padding-bottom: 10px;
 }
 
@@ -88,11 +97,11 @@ body, html {
     font-family: 'Orbitron', sans-serif;
     font-size: 10px;
     letter-spacing: 1.5px;
-    color: rgba(0,240,255,0.8);
+    color: rgba(0, 230, 118, 0.85);
 }
 #settings-drawer select {
-    background: rgba(0,0,0,0.55);
-    border: 1px solid rgba(0,240,255,0.3);
+    background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(0, 230, 118, 0.35);
     border-radius: 6px;
     color: #fff;
     font-family: 'Rajdhani', sans-serif;
@@ -102,17 +111,17 @@ body, html {
     outline: none;
 }
 #settings-drawer select:focus {
-    border-color: #00f0ff;
-    box-shadow: 0 0 8px rgba(0,240,255,0.3);
+    border-color: #00e676;
+    box-shadow: 0 0 8px rgba(0, 230, 118, 0.4);
 }
 #settings-drawer input[type="range"] {
     width: 100%;
-    accent-color: #ff0080;
+    accent-color: #00e676;
     cursor: pointer;
 }
 .tip-row {
     font-size: 11px;
-    color: rgba(255,255,255,0.4);
+    color: rgba(255,255,255,0.45);
     text-align: center;
     padding-top: 4px;
     border-top: 1px solid rgba(255,255,255,0.08);
@@ -120,265 +129,322 @@ body, html {
 .hidden { display: none !important; }
 
 /* ═══════════════════════════════════════════
-   UNIVERSAL RESPONSIVE IN-GAME HUD (Reference UI Match)
+   HUD LAYER (Speedometer & Coin Counter)
 ═══════════════════════════════════════════ */
 .hud-layer {
-    position: fixed; inset: 0;
-    z-index: 30;
+    position: absolute; inset: 0;
+    z-index: 10;
     pointer-events: none;
-    user-select: none;
-    touch-action: none;
 }
 
-/* ── Top Left: Menu Button & Coin Badge ── */
-.hud-top-left {
+/* Coin counter - minimal top-center pill */
+.coin-pill {
     position: fixed;
     top: max(16px, env(safe-area-inset-top));
-    left: max(16px, env(safe-area-inset-left));
-    z-index: 35;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    pointer-events: auto;
-}
-
-.coin-hud-badge {
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 40;
+    background: rgba(18, 28, 20, 0.78);
+    backdrop-filter: blur(10px);
+    border: 1.5px solid rgba(255, 215, 0, 0.45);
+    border-radius: 20px;
+    padding: 5px 16px;
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 16px;
-    border-radius: 24px;
-    background: rgba(10, 18, 14, 0.84);
-    border: 1.5px solid rgba(255, 234, 0, 0.45);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    color: #ffd700;
     font-family: 'Orbitron', sans-serif;
-    font-size: 14px; font-weight: 700;
-    color: #ffea00;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 14px rgba(255, 234, 0, 0.2);
-}
-
-/* ── Top Right: Settings & Fullscreen ── */
-.hud-top-right {
-    position: fixed;
-    top: max(16px, env(safe-area-inset-top));
-    right: max(16px, env(safe-area-inset-right));
-    z-index: 35;
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    pointer-events: auto;
-}
-
-/* ── Frosted Top Bar Buttons ── */
-.hud-circle-btn {
-    width: 48px; height: 48px;
-    border-radius: 50%;
-    background: rgba(10, 18, 14, 0.84);
-    border: 1.5px solid rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    color: #ffffff;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.45);
-    transition: all 0.15s ease;
-    -webkit-tap-highlight-color: transparent;
-}
-.hud-circle-btn svg {
-    display: block;
-    color: #ffffff;
-}
-.hud-circle-btn:hover, .hud-circle-btn:active {
-    background: rgba(0, 230, 118, 0.25);
-    border-color: #00e676;
-    box-shadow: 0 0 20px rgba(0, 230, 118, 0.5);
-    transform: scale(1.06);
-}
-
-/* ── Bottom Left: Joystick Steering ── */
-.hud-bottom-left {
-    position: fixed;
-    bottom: max(18px, env(safe-area-inset-bottom));
-    left: max(18px, env(safe-area-inset-left));
-    z-index: 35;
-    pointer-events: auto;
-}
-.joystick-zone {
-    display: flex; align-items: center; justify-content: center;
-    touch-action: none;
-}
-.joystick-base {
-    position: relative;
-    width: 130px; height: 130px;
-    border-radius: 50%;
-    background: rgba(10, 18, 14, 0.85);
-    border: 2px solid rgba(0, 230, 118, 0.45);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 0 16px rgba(0, 230, 118, 0.15);
-    display: flex; align-items: center; justify-content: center;
-    touch-action: none; user-select: none; cursor: pointer;
-}
-.j-arrow {
-    position: absolute;
-    color: rgba(255, 255, 255, 0.55);
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 700;
-    pointer-events: none;
-}
-.j-up    { top: 9px; }
-.j-down  { bottom: 9px; }
-.j-left  { left: 9px; }
-.j-right { right: 9px; }
-
-.joystick-thumb {
-    position: absolute;
-    width: 52px; height: 52px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, #00e676, #007744);
-    border: 2px solid #ffffff;
-    box-shadow: 0 0 18px rgba(0, 230, 118, 0.85);
-    pointer-events: none;
-    transition: transform 0.03s ease-out;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
 }
 
-/* ── Bottom Center: Speedometer Pill (Exact Reference Match) ── */
-.hud-bottom-center {
+/* Speedometer - bottom-center capsule pill (matching reference image) */
+.speed-pill {
     position: fixed;
     bottom: max(20px, env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
-    z-index: 35;
-    pointer-events: auto;
-}
-.speedo-pill {
+    z-index: 40;
+    background: rgba(18, 28, 20, 0.85);
+    backdrop-filter: blur(14px);
+    border: 2px solid rgba(0, 230, 118, 0.5);
+    border-radius: 30px;
+    padding: 8px 30px;
     display: flex;
     align-items: baseline;
-    justify-content: center;
     gap: 8px;
-    padding: 10px 32px;
-    border-radius: 30px;
-    background: rgba(10, 18, 14, 0.88);
-    border: 2px solid rgba(0, 230, 118, 0.6);
-    border-bottom: 3.5px solid #00e676;
-    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 22px rgba(0, 230, 118, 0.4);
-    min-width: 150px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 18px rgba(0, 230, 118, 0.25);
+    pointer-events: auto;
 }
 .speed-num {
     font-family: 'Orbitron', sans-serif;
-    font-size: 34px; font-weight: 900;
+    font-size: 32px;
+    font-weight: 900;
     color: #ffffff;
-    text-shadow: 0 0 14px rgba(0, 230, 118, 0.8);
     line-height: 1;
+    text-shadow: 0 0 10px rgba(255,255,255,0.4);
 }
 .speed-unit {
     font-family: 'Orbitron', sans-serif;
-    font-size: 13px; font-weight: 700;
-    color: rgba(255, 255, 255, 0.9);
-    letter-spacing: 1.5px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #00e676;
+    letter-spacing: 1px;
 }
 
-/* ── Bottom Right: Action Buttons (Nitro, Jump, Fly) ── */
-.hud-bottom-right {
-    position: fixed;
-    bottom: max(18px, env(safe-area-inset-bottom));
-    right: max(18px, env(safe-area-inset-right));
-    z-index: 35;
-    pointer-events: auto;
+/* ═══════════════════════════════════════════
+   GAMEPLAY TOUCH CONTROLS (Joystick & Action Buttons)
+═══════════════════════════════════════════ */
+.mobile-ui {
+    position: absolute; inset: 0;
+    z-index: 30;
+    pointer-events: none;
 }
-.action-buttons-group {
+.mobile-ui.hidden { display: none !important; }
+
+/* ─── Virtual Joystick (lower-left) ─── */
+.joystick-zone {
+    position: fixed;
+    bottom: max(20px, env(safe-area-inset-bottom));
+    left: max(20px, env(safe-area-inset-left));
+    z-index: 40;
+    pointer-events: auto;
+    touch-action: none;
+}
+.joystick-base {
+    position: relative;
+    width: 136px;
+    height: 136px;
+    border-radius: 50%;
+    background: rgba(18, 28, 22, 0.78);
+    border: 2px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 0 16px rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
+    user-select: none;
+    cursor: pointer;
+}
+.joy-arrow {
+    position: absolute;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.45);
+    pointer-events: none;
+}
+.joy-up    { top: 8px; left: 50%; transform: translateX(-50%); }
+.joy-down  { bottom: 8px; left: 50%; transform: translateX(-50%); }
+.joy-left  { left: 8px; top: 50%; transform: translateY(-50%); }
+.joy-right { right: 8px; top: 50%; transform: translateY(-50%); }
+
+.joystick-thumb {
+    position: absolute;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #2d3e32, #141e17);
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+    transition: transform 0.03s ease-out;
+}
+.thumb-inner {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* ─── Action Buttons Cluster (lower-right: Nitro, Jump, Fly) ─── */
+.action-cluster {
+    position: fixed;
+    bottom: max(20px, env(safe-area-inset-bottom));
+    right: max(20px, env(safe-area-inset-right));
+    z-index: 40;
     display: flex;
     align-items: center;
     gap: 14px;
+    pointer-events: auto;
 }
 
 .action-btn {
     width: 68px; height: 68px;
-    min-width: 52px; min-height: 52px;
     border-radius: 50%;
-    background: rgba(10, 18, 14, 0.86);
-    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    background: rgba(18, 28, 22, 0.82);
+    backdrop-filter: blur(12px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    transition: transform 0.08s ease, background 0.08s ease, box-shadow 0.08s ease;
+    border: 2px solid transparent;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
-    transition: transform 0.08s, box-shadow 0.08s, background 0.08s;
+    outline: none;
 }
-.action-btn .btn-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 24px;
+.action-icon {
+    width: 24px; height: 24px;
+    margin-bottom: 2px;
 }
-.action-btn .btn-label {
+.action-label {
     font-family: 'Orbitron', sans-serif;
-    font-size: 8.5px; font-weight: 900;
-    letter-spacing: 1.2px;
-    margin-top: 3px;
-    color: #ffffff;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
 }
 
-/* Nitro Button — Blue Glow */
-.action-nitro {
-    border: 2px solid #00b0ff;
-    box-shadow: 0 0 18px rgba(0, 176, 255, 0.45);
+/* Button colors & accents matching reference image */
+.btn-nitro {
+    border-color: rgba(0, 176, 255, 0.55);
+    box-shadow: 0 0 16px rgba(0, 176, 255, 0.25);
+    color: #00b0ff;
 }
-.action-nitro .btn-icon svg { color: #00b0ff; fill: #00b0ff; }
-.action-nitro.active, .action-nitro:active {
+.btn-nitro.active, .btn-nitro:active {
     background: rgba(0, 176, 255, 0.28);
-    box-shadow: 0 0 28px rgba(0, 176, 255, 0.8);
+    box-shadow: 0 0 28px rgba(0, 176, 255, 0.7);
     transform: scale(0.92);
 }
 
-/* Jump Button — Green Glow */
-.action-jump {
-    border: 2px solid #00e676;
-    box-shadow: 0 0 18px rgba(0, 230, 118, 0.45);
+.btn-jump {
+    border-color: rgba(0, 230, 118, 0.55);
+    box-shadow: 0 0 16px rgba(0, 230, 118, 0.25);
+    color: #00e676;
 }
-.action-jump .btn-icon svg { color: #00e676; stroke: #00e676; }
-.action-jump.active, .action-jump:active {
+.btn-jump.active, .btn-jump:active {
     background: rgba(0, 230, 118, 0.28);
-    box-shadow: 0 0 28px rgba(0, 230, 118, 0.8);
+    box-shadow: 0 0 28px rgba(0, 230, 118, 0.7);
     transform: scale(0.92);
 }
 
-/* Fly Button — Amber Glow */
-.action-fly {
-    border: 2px solid #ffab00;
-    box-shadow: 0 0 18px rgba(255, 171, 0, 0.45);
+.btn-fly {
+    border-color: rgba(255, 170, 0, 0.55);
+    box-shadow: 0 0 16px rgba(255, 170, 0, 0.25);
+    color: #ffea00;
 }
-.action-fly .btn-icon svg { color: #ffab00; stroke: #ffab00; }
-.action-fly.active, .action-fly:active {
-    background: rgba(255, 171, 0, 0.28);
-    box-shadow: 0 0 28px rgba(255, 171, 0, 0.8);
+.btn-fly.active, .btn-fly:active {
+    background: rgba(255, 170, 0, 0.28);
+    box-shadow: 0 0 28px rgba(255, 170, 0, 0.7);
     transform: scale(0.92);
 }
 
-/* ─── Mobile Portrait & Landscape Arrangement ─── */
-@media (max-width: 768px) {
-    .hud-circle-btn { width: 44px; height: 44px; }
-    .joystick-base { width: 110px; height: 110px; }
-    .joystick-thumb { width: 46px; height: 46px; }
-    
-    .action-btn { width: 56px; height: 56px; min-width: 44px; min-height: 44px; }
-    .action-btn .btn-icon svg { width: 18px; height: 18px; }
-    .action-btn .btn-label { font-size: 7.5px; margin-top: 2px; }
-    .action-buttons-group { gap: 10px; }
-    
-    .speedo-pill { padding: 8px 22px; min-width: 125px; }
-    .speed-num { font-size: 26px; }
-    .speed-unit { font-size: 11px; }
-    .coin-hud-badge { padding: 6px 12px; font-size: 12px; }
+/* ═══════════════════════════════════════════
+   OVERLAY SCREENS (Main Menu & Game Over)
+═══════════════════════════════════════════ */
+.overlay-screen {
+    position: absolute; inset: 0;
+    z-index: 60;
+    background: rgba(6, 18, 12, 0.68);
+    backdrop-filter: blur(16px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
 }
 
-@media (max-width: 480px) {
-    /* Stack action buttons vertically on right side matching mobile layout graphic */
-    .action-buttons-group {
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 10px;
-    }
+.glass-card {
+    background: rgba(12, 28, 20, 0.88);
+    border: 1.5px solid rgba(0, 230, 118, 0.45);
+    border-radius: 20px;
+    padding: 40px 44px;
+    max-width: 490px; width: 100%;
+    text-align: center;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 35px rgba(0, 230, 118, 0.22);
+}
+
+.game-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 42px; font-weight: 900;
+    letter-spacing: 3px;
+    color: #ffffff;
+    text-shadow: 0 0 20px rgba(0, 230, 118, 0.6);
+}
+.game-title .accent-green {
+    color: #00e676;
+    text-shadow: 0 0 24px rgba(0, 230, 118, 0.85);
+}
+.subtitle {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px; letter-spacing: 4px; color: #80eec0;
+    margin: 6px 0 26px;
+}
+
+.vehicle-badge {
+    background: rgba(0, 40, 20, 0.45);
+    border: 1px solid rgba(0, 230, 118, 0.25);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 26px;
+}
+.badge-tag {
+    display: inline-block;
+    background: rgba(0, 230, 118, 0.18);
+    border: 1px solid #00e676;
+    color: #00e676;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px; letter-spacing: 2px;
+    padding: 4px 12px; border-radius: 20px;
+    margin-bottom: 8px;
+}
+.vehicle-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 21px; color: #fff;
+}
+.vehicle-sub { font-size: 13px; color: #a0d8c0; margin-top: 4px; }
+
+.menu-actions { margin-bottom: 24px; }
+.btn-primary {
+    background: linear-gradient(135deg, #00c853, #00b0ff);
+    border: none; color: #fff;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px; font-weight: 900;
+    letter-spacing: 2px;
+    padding: 16px 48px;
+    border-radius: 12px; cursor: pointer;
+    box-shadow: 0 0 26px rgba(0, 200, 83, 0.5);
+    transition: all 0.2s ease;
+    pointer-events: auto;
+    width: 100%;
+}
+.btn-primary:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 0 38px rgba(0, 230, 118, 0.8);
+}
+
+.how-to-play {
+    font-size: 13px; color: #b0d8c5; line-height: 1.6;
+    border-top: 1px solid rgba(0, 230, 118, 0.15);
+    padding-top: 16px;
+}
+.how-to-play h4 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px; color: #00e676;
+    letter-spacing: 2px; margin-bottom: 7px;
+}
+
+/* Game Over */
+.modal-card { max-width: 400px; }
+.crash-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 38px; font-weight: 900;
+    color: #ff3344;
+    text-shadow: 0 0 22px rgba(255,51,68,0.8);
+    margin-bottom: 24px;
+}
+.final-stats {
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px; padding: 16px;
+    margin-bottom: 24px;
+}
+.final-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 14px; color: #aaa;
+}
+.final-row strong {
+    font-family: 'Orbitron', sans-serif;
+    color: #ffd700;
+    font-size: 18px;
 }
 
