@@ -128,8 +128,8 @@ class GameEngine {
         this.isNitro  = false;
         this.airborne = false;
 
-        // Score
-        this.score = 0; this.coins = 0; this.distance = 0;
+        // Coins
+        this.coins = 0;
 
         // Input
         this.input = { fwd:false, bwd:false, left:false, right:false,
@@ -562,18 +562,23 @@ class GameEngine {
     }
 
     _spawnGem() {
+        const coinGroup = new THREE.Group();
         const m = new THREE.Mesh(
-            new THREE.OctahedronGeometry(0.85),
+            new THREE.CylinderGeometry(0.85, 0.85, 0.18, 20),
             new THREE.MeshStandardMaterial({
-                color: 0x00e676, emissive: 0x00c853,
-                emissiveIntensity: 1.2, roughness: 0.1, metalness: 0.3
+                color: 0xffea00, metalness: 0.92, roughness: 0.15,
+                emissive: 0xffaa00, emissiveIntensity: 0.35
             })
         );
+        m.rotation.x = Math.PI / 2;
+        m.castShadow = true;
+        coinGroup.add(m);
+
         const [x, z] = this._rndPos();
         const y = this._terrainH(x, z);
-        m.position.set(x, y + 1.6, z);
-        this.scene.add(m);
-        this.gems.push(m);
+        coinGroup.position.set(x, y + 1.2, z);
+        this.scene.add(coinGroup);
+        this.gems.push(coinGroup);
     }
 
     // ── EVENTS ─────────────────────────────────────────────
@@ -652,6 +657,7 @@ class GameEngine {
         const btnStart   = document.getElementById('btn-start');
         const btnRestart = document.getElementById('btn-restart');
         const btnFs      = document.getElementById('fullscreen-btn');
+        const menuBtn    = document.getElementById('menu-btn');
 
         if (btnStart) {
             btnStart.addEventListener('touchstart', startFn, { passive: false });
@@ -669,18 +675,30 @@ class GameEngine {
             btnFs.addEventListener('touchstart', toggleFn, { passive: false });
             btnFs.addEventListener('click', toggleFn);
         }
+        if (menuBtn) {
+            const openMenu = (e) => {
+                if (e) e.preventDefault();
+                this.state = 'MENU';
+                document.getElementById('start-screen').classList.remove('hidden');
+                document.getElementById('hud').classList.add('hidden');
+            };
+            menuBtn.addEventListener('touchstart', openMenu, { passive: false });
+            menuBtn.addEventListener('click', openMenu);
+        }
 
         // Settings panel
         const tog = document.getElementById('settings-toggle');
         const drw = document.getElementById('settings-drawer');
-        tog.addEventListener('click', e => {
-            e.stopPropagation();
-            drw.classList.toggle('hidden');
-        });
-        document.addEventListener('click', e => {
-            if (!document.getElementById('settings-panel').contains(e.target))
-                drw.classList.add('hidden');
-        });
+        if (tog && drw) {
+            tog.addEventListener('click', e => {
+                e.stopPropagation();
+                drw.classList.toggle('hidden');
+            });
+            document.addEventListener('click', e => {
+                const sp = document.getElementById('hud-top-right') || document.getElementById('settings-panel');
+                if (sp && !sp.contains(e.target)) drw.classList.add('hidden');
+            });
+        }
 
         document.getElementById('engine-type').addEventListener('change', e => {
             this.audio.setProfile(e.target.value);
@@ -700,53 +718,56 @@ class GameEngine {
             this._ctrl = e.target.value;
         });
 
-        // Auto-show mobile controls on touch devices
-        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-            document.getElementById('mobile-controls').classList.remove('always-hidden');
-        }
-
-        // "Show touch controls" setting toggle
-        document.getElementById('toggle-touch').addEventListener('change', e => {
-            const mc = document.getElementById('mobile-controls');
-            if (e.target.checked) mc.classList.remove('always-hidden');
-            else                  mc.classList.add('always-hidden');
-        });
-
         this._bindMobileControls();
     }
 
-    // ── MOBILE / TABLET ON-SCREEN CONTROLS ─────────────────
+    // ── MOBILE / TABLET / ACTION CONTROLS ─────────────────
     _bindMobileControls() {
-        // Map action button-id → input flag
-        const btnMap = {
-            'm-jump':  'thrust',
-            'm-nitro': 'nitro',
-            'm-drift': 'drift'
-        };
+        const nitroBtn = document.getElementById('m-nitro');
+        const jumpBtn  = document.getElementById('m-jump');
+        const flyBtn   = document.getElementById('m-fly');
 
-        Object.entries(btnMap).forEach(([id, flag]) => {
-            const el = document.getElementById(id);
-            if (!el) return;
+        if (nitroBtn) {
+            const down = e => { e.preventDefault(); this.audio.init(); this.input.nitro = true; nitroBtn.classList.add('active'); };
+            const up   = e => { e.preventDefault(); this.input.nitro = false; nitroBtn.classList.remove('active'); };
+            nitroBtn.addEventListener('touchstart', down, { passive: false });
+            nitroBtn.addEventListener('touchend',   up,   { passive: false });
+            nitroBtn.addEventListener('touchcancel',up,   { passive: false });
+            nitroBtn.addEventListener('mousedown',  down);
+            nitroBtn.addEventListener('mouseup',    up);
+            nitroBtn.addEventListener('mouseleave', up);
+        }
 
+        if (jumpBtn) {
             const down = e => {
-                e.preventDefault();
-                this.audio.init();
-                this.input[flag] = true;
-                el.classList.add('active');
+                e.preventDefault(); this.audio.init();
+                jumpBtn.classList.add('active');
+                const groundY = this._terrainH(this.carX, this.carZ);
+                if (this.carY <= groundY + 0.6) {
+                    this.vy = 24;
+                    this.audio.playLand();
+                }
+                this.input.thrust = true;
             };
-            const up = e => {
-                e.preventDefault();
-                this.input[flag] = false;
-                el.classList.remove('active');
-            };
+            const up = e => { e.preventDefault(); this.input.thrust = false; jumpBtn.classList.remove('active'); };
+            jumpBtn.addEventListener('touchstart', down, { passive: false });
+            jumpBtn.addEventListener('touchend',   up,   { passive: false });
+            jumpBtn.addEventListener('touchcancel',up,   { passive: false });
+            jumpBtn.addEventListener('mousedown',  down);
+            jumpBtn.addEventListener('mouseup',    up);
+            jumpBtn.addEventListener('mouseleave', up);
+        }
 
-            el.addEventListener('touchstart', down, { passive: false });
-            el.addEventListener('touchend',   up,   { passive: false });
-            el.addEventListener('touchcancel',up,   { passive: false });
-            el.addEventListener('mousedown',  down);
-            el.addEventListener('mouseup',    up);
-            el.addEventListener('mouseleave', up);
-        });
+        if (flyBtn) {
+            const down = e => { e.preventDefault(); this.audio.init(); this.input.thrust = true; flyBtn.classList.add('active'); };
+            const up   = e => { e.preventDefault(); this.input.thrust = false; flyBtn.classList.remove('active'); };
+            flyBtn.addEventListener('touchstart', down, { passive: false });
+            flyBtn.addEventListener('touchend',   up,   { passive: false });
+            flyBtn.addEventListener('touchcancel',up,   { passive: false });
+            flyBtn.addEventListener('mousedown',  down);
+            flyBtn.addEventListener('mouseup',    up);
+            flyBtn.addEventListener('mouseleave', up);
+        }
 
         // ── VIRTUAL JOYSTICK BINDING ──
         const joyBase  = document.getElementById('joystick-base');
@@ -912,7 +933,7 @@ class GameEngine {
         this.audio.init();
         this._requestFullscreen();
         this.state    = 'PLAYING';
-        this.score    = 0; this.coins = 0; this.distance = 0;
+        this.coins    = 0;
         this.speed    = 0; this.steer = 0;
         this.heading  = 0;
         this.carX     = 0; this.carY = 0; this.carZ = 0;
@@ -930,12 +951,12 @@ class GameEngine {
         this.obstacles = []; this.gems = [];
         this._spawnEntities();
 
+        const coinEl = document.getElementById('coin-val');
+        if (coinEl) coinEl.innerText = '0';
+
         document.getElementById('start-screen').classList.add('hidden');
         document.getElementById('game-over-screen').classList.add('hidden');
         document.getElementById('hud').classList.remove('hidden');
-        // Show mobile controls during play
-        const mc = document.getElementById('mobile-controls');
-        if (!mc.classList.contains('always-hidden')) mc.classList.remove('hidden');
     }
 
     _gameOver() {
@@ -943,12 +964,11 @@ class GameEngine {
         this.audio.playCrash();
         this.speed = 0; this.vy = 0;
 
-        document.getElementById('final-score').innerText = Math.floor(this.score).toLocaleString();
-        document.getElementById('final-dist').innerText  = (this.distance / 1000).toFixed(2) + ' km';
-        document.getElementById('final-coins').innerText = this.coins;
+        const finalCoinsEl = document.getElementById('final-coins');
+        if (finalCoinsEl) finalCoinsEl.innerText = this.coins;
+
         document.getElementById('hud').classList.add('hidden');
         document.getElementById('game-over-screen').classList.remove('hidden');
-        document.getElementById('mobile-controls').classList.add('hidden');
 
         // Shake effect
         if (window.gsap) {
@@ -1108,18 +1128,20 @@ class GameEngine {
             if (Math.sqrt(dx*dx + dz*dz) < 2.85) { this._gameOver(); return; }
         }
 
-        // ── GEMS ──
+        // ── 3D GOLD COIN PICKUPS ──
         for (const g of this.gems) {
-            g.rotation.y += dt * 2.8;
-            g.position.y  = 1.4 + Math.sin(Date.now()*0.002 + g.position.x)*0.3;
+            g.rotation.y += dt * 3.2;
             const dx = this.carX - g.position.x;
             const dy = this.carY - g.position.y;
             const dz = this.carZ - g.position.z;
-            if (Math.sqrt(dx*dx + dy*dy + dz*dz) < 2.4) {
-                this.coins++; this.score += 500;
+            if (Math.sqrt(dx*dx + dy*dy + dz*dz) < 2.5) {
+                this.coins++;
                 this.audio.playPickup();
                 const [nx, nz] = this._rndPos();
-                g.position.set(nx, 1.4, nz);
+                const ny = this._terrainH(nx, nz);
+                g.position.set(nx, ny + 1.2, nz);
+                const coinEl = document.getElementById('coin-val');
+                if (coinEl) coinEl.innerText = this.coins;
             }
         }
 
@@ -1129,23 +1151,15 @@ class GameEngine {
             l.intensity = 1.4 + Math.sin(t * 1.6 + i * 2.2) * 0.9;
         });
 
-        // ── SCORE / DISTANCE ──
-        const mv = Math.abs(this.speed) * dt;
-        this.distance += mv;
-        this.score    += mv * (this.isNitro ? 22 : 8) * (this.airborne ? 1.6 : 1.0);
-
         // ── AUDIO ──
         this.audio.updateEngine(Math.abs(this.speed) / this.MAX_SPD, this.input.fwd);
 
-        // ── HUD ──
+        // ── HUD UPDATE ──
         const kmh = Math.abs(this.speed) * 3.6;
-        document.getElementById('speed-val').innerText = Math.floor(kmh);
-        document.getElementById('score-val').innerText = Math.floor(this.score).toString().padStart(6,'0');
-        document.getElementById('coin-val').innerText  = `💎 ${this.coins}`;
-        document.getElementById('dist-val').innerText  = (this.distance/1000).toFixed(2) + ' km';
-        document.getElementById('alt-val').innerText   = Math.floor(this.carY) + ' m';
-        document.getElementById('gear-val').innerText  = Math.min(6, Math.floor(kmh/42)+1);
-        document.getElementById('nitro-fill').style.width = `${this.nitro}%`;
+        const spdEl = document.getElementById('speed-val');
+        if (spdEl) spdEl.innerText = Math.floor(kmh);
+        const coinEl = document.getElementById('coin-val');
+        if (coinEl) coinEl.innerText = this.coins;
     }
 
     // ── CAMERA UPDATE ───────────────────────────────────────

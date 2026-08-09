@@ -18,96 +18,96 @@
 <div id="game-container">
     <canvas id="bg-canvas"></canvas>
 
-    <!-- ── ALWAYS-VISIBLE SETTINGS & FULLSCREEN PANEL (top-right) ── -->
-    <div id="settings-panel">
-        <button id="fullscreen-btn" title="Toggle Fullscreen">⛶</button>
-        <button id="settings-toggle" title="Settings">⚙</button>
-        <div id="settings-drawer" class="hidden">
-            <h3>⚙ SETTINGS</h3>
-
-            <div class="setting-row">
-                <span class="s-label">CONTROLS</span>
-                <select id="ctrl-method">
-                    <option value="both">WASD + Arrows</option>
-                    <option value="wasd">WASD Only</option>
-                    <option value="arrows">Arrows Only</option>
-                </select>
-            </div>
-
-            <div class="setting-row">
-                <span class="s-label">ENGINE SOUND</span>
-                <select id="engine-type">
-                    <option value="v8">🔥 V8 Muscle</option>
-                    <option value="electric">⚡ Electric</option>
-                    <option value="diesel">🚛 Diesel Truck</option>
-                    <option value="rocket">🚀 Rocket</option>
-                </select>
-            </div>
-
-            <div class="setting-row">
-                <span class="s-label">ENGINE VOL <span id="eng-vol-lbl">80%</span></span>
-                <input type="range" id="sl-engine" min="0" max="100" value="80">
-            </div>
-
-            <div class="setting-row">
-                <span class="s-label">SFX VOL <span id="sfx-vol-lbl">90%</span></span>
-                <input type="range" id="sl-sfx" min="0" max="100" value="90">
-            </div>
-
-            <div class="setting-row">
-                <span class="s-label">CAMERA VIEW</span>
-                <select id="cam-select">
-                    <option value="0">Chase (Dynamic)</option>
-                    <option value="1">Close Follow</option>
-                    <option value="2">Top-Down</option>
-                </select>
-            </div>
-
-            <div class="tip-row">
-                <span>🖱 Drag canvas to orbit camera</span>
-            </div>
-            <div class="setting-row">
-                <label class="s-label toggle-label">
-                    <input type="checkbox" id="toggle-touch"> SHOW TOUCH CONTROLS
-                </label>
-            </div>
-        </div>
-    </div>
-
-    <!-- ── HUD (in-game) ── -->
+    <!-- ── IN-GAME HUD ── -->
     <div id="hud" class="hud-layer hidden">
-        <!-- Top Stats -->
-        <div class="hud-top">
-            <div class="stat-box">
-                <span class="stat-label">SCORE</span>
-                <span id="score-val" class="stat-value">000000</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-label">GEMS</span>
-                <span id="coin-val" class="stat-value">💎 0</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-label">DISTANCE</span>
-                <span id="dist-val" class="stat-value">0.00 km</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-label">ALTITUDE</span>
-                <span id="alt-val" class="stat-value">0 m</span>
+        <!-- Top-Left: Menu / Exit Button -->
+        <div class="hud-top-left">
+            <button id="menu-btn" class="hud-circle-btn" title="Menu / Exit">☰</button>
+        </div>
+
+        <!-- Top-Right: Fullscreen & Settings -->
+        <div class="hud-top-right">
+            <button id="fullscreen-btn" class="hud-circle-btn" title="Toggle Fullscreen">⛶</button>
+            <button id="settings-toggle" class="hud-circle-btn" title="Settings">⚙</button>
+
+            <div id="settings-drawer" class="hidden">
+                <h3>⚙ SETTINGS</h3>
+                <div class="setting-row">
+                    <span class="s-label">CONTROLS</span>
+                    <select id="ctrl-method">
+                        <option value="both">WASD + Arrows</option>
+                        <option value="wasd">WASD Only</option>
+                        <option value="arrows">Arrows Only</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <span class="s-label">ENGINE SOUND</span>
+                    <select id="engine-type">
+                        <option value="v8">🔥 V8 Muscle</option>
+                        <option value="electric">⚡ Electric</option>
+                        <option value="diesel">🚛 Diesel Truck</option>
+                        <option value="rocket">🚀 Rocket</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <span class="s-label">ENGINE VOL <span id="eng-vol-lbl">80%</span></span>
+                    <input type="range" id="sl-engine" min="0" max="100" value="80">
+                </div>
+                <div class="setting-row">
+                    <span class="s-label">SFX VOL <span id="sfx-vol-lbl">90%</span></span>
+                    <input type="range" id="sl-sfx" min="0" max="100" value="90">
+                </div>
+                <div class="setting-row">
+                    <span class="s-label">CAMERA VIEW</span>
+                    <select id="cam-select">
+                        <option value="0">Chase (Dynamic)</option>
+                        <option value="1">Close Follow</option>
+                        <option value="2">Top-Down</option>
+                    </select>
+                </div>
+                <div class="tip-row">
+                    <span>🖱 Drag canvas to orbit camera</span>
+                </div>
             </div>
         </div>
 
-        <!-- Bottom-right: Speedometer + Nitro -->
-        <div class="hud-bottom-right">
-            <div class="gauge-circle">
+        <!-- Bottom-Left: Steering Joystick -->
+        <div class="hud-bottom-left">
+            <div id="joystick-container" class="joystick-zone">
+                <div id="joystick-base" class="joystick-base">
+                    <span class="j-arrow j-up">▲</span>
+                    <span class="j-arrow j-down">▼</span>
+                    <span class="j-arrow j-left">◄</span>
+                    <span class="j-arrow j-right">►</span>
+                    <div id="joystick-thumb" class="joystick-thumb"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom-Center: Speedometer Pill + Coin Counter -->
+        <div class="hud-bottom-center">
+            <div class="speedo-pill">
                 <span id="speed-val" class="speed-num">0</span>
                 <span class="speed-unit">KM/H</span>
-                <span class="gear-lbl">GEAR <span id="gear-val">1</span></span>
+                <span class="coin-badge">🪙 <span id="coin-val">0</span></span>
             </div>
-            <div class="nitro-wrap">
-                <div class="nitro-label">NITRO [SHIFT]</div>
-                <div class="nitro-track">
-                    <div id="nitro-fill" class="nitro-fill"></div>
-                </div>
+        </div>
+
+        <!-- Bottom-Right: Nitro, Jump, Fly Action Buttons -->
+        <div class="hud-bottom-right">
+            <div class="action-buttons-group">
+                <button id="m-nitro" class="action-btn action-nitro" title="Nitro Boost">
+                    <span class="btn-icon">⚡</span>
+                    <span class="btn-label">NITRO</span>
+                </button>
+                <button id="m-jump" class="action-btn action-jump" title="Jump">
+                    <span class="btn-icon">▲</span>
+                    <span class="btn-label">JUMP</span>
+                </button>
+                <button id="m-fly" class="action-btn action-fly" title="Fly Thruster">
+                    <span class="btn-icon">🚀</span>
+                    <span class="btn-label">FLY</span>
+                </button>
             </div>
         </div>
     </div>
@@ -130,7 +130,7 @@
 
             <div class="how-to-play">
                 <h4>🌲 HOW TO EXPLORE</h4>
-                <p>Cruise across lush emerald meadows, rivers &amp; alpine peaks. Collect glowing solar gems, press <strong>SHIFT</strong> for Nitro, hold <strong>SPACE / E</strong> (or Touch Jump) to launch your car into the sky and fly!</p>
+                <p>Cruise across lush emerald meadows, rivers &amp; alpine peaks. Collect golden coins, hit <strong>SHIFT</strong> for Nitro, press <strong>JUMP</strong> or hold <strong>SPACE / FLY</strong> to launch into the sky and fly!</p>
             </div>
         </div>
     </div>
@@ -140,36 +140,11 @@
         <div class="glass-card modal-card">
             <h2 class="crash-title">CRASHED!</h2>
             <div class="final-stats">
-                <div class="final-row"><span>FINAL SCORE</span> <strong id="final-score">0</strong></div>
-                <div class="final-row"><span>DISTANCE</span>    <strong id="final-dist">0.00 km</strong></div>
-                <div class="final-row"><span>GEMS</span>        <strong id="final-coins">0</strong></div>
+                <div class="final-row"><span>COINS COLLECTED</span> <strong id="final-coins">0</strong></div>
             </div>
             <button id="btn-restart" class="btn-primary">PLAY AGAIN</button>
         </div>
     </div>
-</div>
-
-<!-- ── MOBILE / TABLET TOUCH CONTROLS ── -->
-<!-- always-hidden = user disabled; hidden = game not running -->
-<div id="mobile-controls" class="mobile-ui always-hidden hidden">
-
-    <!-- LEFT: Virtual Joystick -->
-    <div id="joystick-container" class="joystick-zone">
-        <div id="joystick-base" class="joystick-base">
-            <div id="joystick-thumb" class="joystick-thumb"></div>
-            <div class="joystick-label">DRIVE &amp; STEER</div>
-        </div>
-    </div>
-
-    <!-- RIGHT: Action buttons -->
-    <div class="action-zone">
-        <div class="action-top">
-            <button id="m-nitro" class="mb mb-nitro">⚡<span>NITRO</span></button>
-            <button id="m-drift" class="mb mb-drift">💨<span>DRIFT</span></button>
-        </div>
-        <button id="m-jump" class="mb mb-jump">🚀<span>JUMP / FLY</span></button>
-    </div>
-
 </div>
 
 <script src="game.js"></script>

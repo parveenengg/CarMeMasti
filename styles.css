@@ -120,434 +120,239 @@ body, html {
 .hidden { display: none !important; }
 
 /* ═══════════════════════════════════════════
-   HUD
+   UNIVERSAL RESPONSIVE IN-GAME HUD (Reference UI Match)
 ═══════════════════════════════════════════ */
 .hud-layer {
-    position: absolute; inset: 0;
-    z-index: 10;
-    pointer-events: none;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.hud-top {
-    display: flex;
-    justify-content: center;
-    gap: 14px;
-    flex-wrap: wrap;
-}
-
-.stat-box {
-    background: rgba(8, 24, 16, 0.78);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(0, 230, 118, 0.38);
-    border-radius: 8px;
-    padding: 8px 20px;
-    text-align: center;
-    min-width: 130px;
-    box-shadow: 0 0 14px rgba(0, 230, 118, 0.15);
-}
-.stat-label {
-    display: block;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 10px;
-    letter-spacing: 2px;
-    color: #00e676;
-    margin-bottom: 3px;
-}
-.stat-value {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 20px;
-    font-weight: 800;
-    color: #fff;
-    text-shadow: 0 0 8px rgba(0, 230, 118, 0.5);
-}
-
-/* Speedometer */
-.hud-bottom-right {
-    position: absolute;
-    bottom: 24px; right: 24px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 10px;
-}
-.gauge-circle {
-    width: 148px; height: 148px;
-    border-radius: 50%;
-    background: rgba(8, 24, 16, 0.82);
-    border: 2px solid rgba(0, 230, 118, 0.55);
-    box-shadow: 0 0 24px rgba(0, 230, 118, 0.3), inset 0 0 12px rgba(0, 230, 118, 0.15);
-    display: flex; flex-direction: column;
-    justify-content: center; align-items: center;
-    backdrop-filter: blur(8px);
-}
-.speed-num {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 40px; font-weight: 900;
-    color: #fff;
-    text-shadow: 0 0 14px rgba(0, 230, 118, 0.8);
-    line-height: 1;
-}
-.speed-unit {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 11px; color: #00e676;
-    letter-spacing: 2px; margin-top: 2px;
-}
-.gear-lbl {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 12px; color: #00e5ff;
-    margin-top: 5px; letter-spacing: 1px;
-}
-
-/* Nitro */
-.nitro-wrap {
-    width: 210px;
-    background: rgba(5,8,22,0.7);
-    border: 1px solid rgba(0,240,255,0.28);
-    border-radius: 6px;
-    padding: 8px 12px;
-    backdrop-filter: blur(8px);
-}
-.nitro-label {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 10px; color: #00f0ff;
-    letter-spacing: 1px; margin-bottom: 5px;
-}
-.nitro-track {
-    height: 10px;
-    background: rgba(0,0,0,0.6);
-    border-radius: 5px;
-    overflow: hidden;
-    border: 1px solid rgba(0,240,255,0.3);
-}
-.nitro-fill {
-    height: 100%; width: 100%;
-    background: linear-gradient(90deg, #00f0ff, #ff0080);
-    box-shadow: 0 0 8px #00f0ff;
-    transition: width 0.1s linear;
-    border-radius: 5px;
-}
-
-/* Controls hint */
-.hud-bottom-left {
-    position: absolute;
-    bottom: 24px; left: 24px;
-    background: rgba(5,8,22,0.65);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 8px;
-    padding: 12px 16px;
-    font-size: 12px;
-    color: #bbb;
-    line-height: 1.85;
-}
-.ctrl-row { display: flex; align-items: center; gap: 6px; }
-kbd {
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.25);
-    border-radius: 4px;
-    padding: 1px 6px;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 10px;
-    color: #fff;
-    box-shadow: 0 2px 0 rgba(0,0,0,0.5);
-}
-
-/* ═══════════════════════════════════════════
-   OVERLAY SCREENS
-═══════════════════════════════════════════ */
-.overlay-screen {
-    position: absolute; inset: 0;
-    z-index: 20;
-    background: rgba(6, 18, 12, 0.65);
-    backdrop-filter: blur(16px);
-    display: flex; align-items: center; justify-content: center;
-    padding: 20px;
-}
-
-.glass-card {
-    background: rgba(12, 28, 20, 0.88);
-    border: 1.5px solid rgba(0, 230, 118, 0.45);
-    border-radius: 20px;
-    padding: 40px 44px;
-    max-width: 490px; width: 100%;
-    text-align: center;
-    box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 35px rgba(0, 230, 118, 0.22);
-}
-
-.game-title {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 42px; font-weight: 900;
-    letter-spacing: 3px;
-    color: #ffffff;
-    text-shadow: 0 0 20px rgba(0, 230, 118, 0.6);
-}
-.game-title .accent-green {
-    color: #00e676;
-    text-shadow: 0 0 24px rgba(0, 230, 118, 0.85);
-}
-.subtitle {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 11px; letter-spacing: 4px; color: #80eec0;
-    margin: 6px 0 26px;
-}
-
-.vehicle-badge {
-    background: rgba(0, 40, 20, 0.45);
-    border: 1px solid rgba(0, 230, 118, 0.25);
-    border-radius: 14px;
-    padding: 16px;
-    margin-bottom: 26px;
-}
-.badge-tag {
-    display: inline-block;
-    background: rgba(0, 230, 118, 0.18);
-    border: 1px solid #00e676;
-    color: #00e676;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 10px; letter-spacing: 2px;
-    padding: 4px 12px; border-radius: 20px;
-    margin-bottom: 8px;
-}
-.vehicle-name {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 21px; color: #fff;
-}
-.vehicle-sub { font-size: 13px; color: #a0d8c0; margin-top: 4px; }
-
-.menu-actions { margin-bottom: 24px; }
-.btn-primary {
-    background: linear-gradient(135deg, #00c853, #00b0ff);
-    border: none; color: #fff;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 16px; font-weight: 900;
-    letter-spacing: 2px;
-    padding: 16px 48px;
-    border-radius: 12px; cursor: pointer;
-    box-shadow: 0 0 26px rgba(0, 200, 83, 0.5);
-    transition: all 0.2s ease;
-    pointer-events: auto;
-    width: 100%;
-}
-.btn-primary:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 0 38px rgba(0, 230, 118, 0.8);
-}
-
-.how-to-play {
-    font-size: 13px; color: #b0d8c5; line-height: 1.6;
-    border-top: 1px solid rgba(0, 230, 118, 0.15);
-    padding-top: 16px;
-}
-.how-to-play h4 {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 11px; color: #00e676;
-    letter-spacing: 2px; margin-bottom: 7px;
-}
-
-/* Game Over */
-.modal-card { max-width: 400px; }
-.crash-title {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 38px; font-weight: 900;
-    color: #ff0044;
-    text-shadow: 0 0 22px rgba(255,0,68,0.8);
-    margin-bottom: 24px;
-}
-.final-stats {
-    background: rgba(0,0,0,0.3);
-    border-radius: 10px; padding: 16px;
-    margin-bottom: 24px;
-}
-.final-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
-    font-size: 14px; color: #aaa;
-}
-.final-row:last-child { border-bottom: none; }
-.final-row strong {
-    font-family: 'Orbitron', sans-serif;
-    color: #00f0ff;
-}
-
-/* Settings toggle label */
-.toggle-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    color: rgba(0,240,255,0.8);
-}
-.toggle-label input { accent-color: #ff0080; cursor: pointer; }
-
-/* ═══════════════════════════════════════════
-   MOBILE / TABLET TOUCH CONTROLS
-═══════════════════════════════════════════ */
-.mobile-ui {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
+    position: fixed; inset: 0;
     z-index: 30;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    padding: 16px 20px max(24px, env(safe-area-inset-bottom));
-    padding-left: max(20px, env(safe-area-inset-left));
-    padding-right: max(20px, env(safe-area-inset-right));
-    pointer-events: auto;
+    pointer-events: none;
+    user-select: none;
     touch-action: none;
 }
-/* always-hidden: toggled off by user; hidden: game not active */
-.mobile-ui.always-hidden { display: none !important; }
-.mobile-ui.hidden        { display: none !important; }
 
-/* ─── Virtual Joystick (left side) ─── */
-.joystick-zone {
+/* ── Top Left: Menu Button ── */
+.hud-top-left {
+    position: fixed;
+    top: max(16px, env(safe-area-inset-top));
+    left: max(16px, env(safe-area-inset-left));
+    z-index: 35;
+    pointer-events: auto;
+}
+
+/* ── Top Right: Settings & Fullscreen ── */
+.hud-top-right {
+    position: fixed;
+    top: max(16px, env(safe-area-inset-top));
+    right: max(16px, env(safe-area-inset-right));
+    z-index: 35;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 4px;
+    gap: 10px;
+    align-items: flex-start;
+    pointer-events: auto;
+}
+
+/* ── Frosted Top Bar Buttons ── */
+.hud-circle-btn {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: rgba(10, 18, 14, 0.82);
+    border: 1.5px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    color: #ffffff;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    transition: all 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+.hud-circle-btn:hover, .hud-circle-btn:active {
+    background: rgba(0, 230, 118, 0.25);
+    border-color: #00e676;
+    box-shadow: 0 0 20px rgba(0, 230, 118, 0.5);
+    transform: scale(1.06);
+}
+
+/* ── Bottom Left: Joystick Steering ── */
+.hud-bottom-left {
+    position: fixed;
+    bottom: max(18px, env(safe-area-inset-bottom));
+    left: max(18px, env(safe-area-inset-left));
+    z-index: 35;
+    pointer-events: auto;
+}
+.joystick-zone {
+    display: flex; align-items: center; justify-content: center;
     touch-action: none;
 }
 .joystick-base {
     position: relative;
-    width: 130px;
-    height: 130px;
+    width: 126px; height: 126px;
     border-radius: 50%;
-    background: rgba(5, 8, 22, 0.78);
-    border: 2px solid rgba(0, 240, 255, 0.55);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 0 22px rgba(0, 240, 255, 0.25), inset 0 0 16px rgba(0, 240, 255, 0.12);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    touch-action: none;
-    user-select: none;
-    cursor: pointer;
+    background: rgba(10, 18, 14, 0.84);
+    border: 2px solid rgba(0, 230, 118, 0.45);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 0 16px rgba(0, 230, 118, 0.15);
+    display: flex; align-items: center; justify-content: center;
+    touch-action: none; user-select: none; cursor: pointer;
 }
+.j-arrow {
+    position: absolute;
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 10px;
+    pointer-events: none;
+}
+.j-up    { top: 8px; }
+.j-down  { bottom: 8px; }
+.j-left  { left: 8px; }
+.j-right { right: 8px; }
+
 .joystick-thumb {
     position: absolute;
-    width: 54px;
-    height: 54px;
+    width: 50px; height: 50px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, #00f0ff, #0066ff);
+    background: radial-gradient(circle at 35% 35%, #00e676, #007744);
     border: 2px solid #ffffff;
-    box-shadow: 0 0 18px rgba(0, 240, 255, 0.85), 0 4px 10px rgba(0,0,0,0.5);
+    box-shadow: 0 0 18px rgba(0, 230, 118, 0.85);
     pointer-events: none;
     transition: transform 0.03s ease-out;
 }
-.joystick-label {
-    position: absolute;
-    bottom: 12px;
+
+/* ── Bottom Center: Speedometer Pill ── */
+.hud-bottom-center {
+    position: fixed;
+    bottom: max(20px, env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 35;
+    pointer-events: auto;
+}
+.speedo-pill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 24px;
+    border-radius: 30px;
+    background: rgba(10, 18, 14, 0.85);
+    border: 2px solid rgba(0, 230, 118, 0.55);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 0 14px rgba(0, 230, 118, 0.18);
+    min-width: 140px;
+}
+.speed-num {
     font-family: 'Orbitron', sans-serif;
-    font-size: 8px;
-    letter-spacing: 1px;
-    color: rgba(0, 240, 255, 0.65);
-    pointer-events: none;
+    font-size: 28px; font-weight: 900;
+    color: #ffffff;
+    text-shadow: 0 0 12px rgba(0, 230, 118, 0.7);
+    line-height: 1;
+}
+.speed-unit {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px; font-weight: 700;
+    color: rgba(255, 255, 255, 0.85);
+    letter-spacing: 1.5px;
+}
+.coin-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px; font-weight: 700;
+    color: #ffea00;
+    margin-left: 12px;
+    padding-left: 12px;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* ─── Action buttons (right side) ─── */
-.action-zone {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
+/* ── Bottom Right: Action Buttons (Nitro, Jump, Fly) ── */
+.hud-bottom-right {
+    position: fixed;
+    bottom: max(18px, env(safe-area-inset-bottom));
+    right: max(18px, env(safe-area-inset-right));
+    z-index: 35;
+    pointer-events: auto;
 }
-.action-top {
+.action-buttons-group {
     display: flex;
-    gap: 8px;
+    align-items: center;
+    gap: 12px;
 }
 
-/* ─── Base mobile button ─── */
-.mb {
+.action-btn {
+    width: 60px; height: 60px;
+    min-width: 48px; min-height: 48px;
+    border-radius: 50%;
+    background: rgba(10, 18, 14, 0.84);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border: 2px solid rgba(0,240,255,0.45);
-    border-radius: 14px;
-    background: rgba(5, 8, 22, 0.78);
-    backdrop-filter: blur(12px);
-    color: #fff;
-    font-size: 22px;
     cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    box-shadow: 0 0 14px rgba(0,240,255,0.18);
-    transition: background 0.08s, box-shadow 0.08s, transform 0.08s;
-    /* Prevent text selection during touch */
     user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.08s, box-shadow 0.08s, background 0.08s;
 }
-.mb span {
+.action-btn .btn-icon {
+    font-size: 19px;
+    line-height: 1;
+}
+.action-btn .btn-label {
     font-family: 'Orbitron', sans-serif;
-    font-size: 9px;
+    font-size: 8px; font-weight: 700;
     letter-spacing: 1px;
-    color: rgba(0,240,255,0.85);
-    margin-top: 2px;
-}
-.mb.active, .mb:active {
-    background: rgba(0,240,255,0.22);
-    box-shadow: 0 0 24px rgba(0,240,255,0.55);
-    transform: scale(0.93);
-    border-color: #00f0ff;
+    margin-top: 3px;
 }
 
-/* D-pad directional buttons — medium square */
-.mb-fwd, .mb-bwd, .mb-left, .mb-right {
-    width: 68px; height: 68px;
+/* Nitro Button — Blue Accent */
+.action-nitro {
+    border: 2px solid #00b0ff;
+    box-shadow: 0 0 16px rgba(0, 176, 255, 0.35);
 }
-/* Left/Right arrows — narrower */
-.mb-left, .mb-right { width: 58px; font-size: 26px; }
-
-/* JUMP button — large, prominent, cyan-to-magenta */
-.mb-jump {
-    width: 110px; height: 90px;
-    font-size: 30px;
-    border-color: rgba(255,0,128,0.6);
-    box-shadow: 0 0 20px rgba(255,0,128,0.3);
-    background: rgba(14, 4, 28, 0.82);
-}
-.mb-jump span { color: #ff0080; }
-.mb-jump.active, .mb-jump:active {
-    background: rgba(255, 0, 128, 0.22);
-    box-shadow: 0 0 32px rgba(255,0,128,0.7);
-    border-color: #ff0080;
+.action-nitro .btn-icon, .action-nitro .btn-label { color: #00b0ff; }
+.action-nitro.active, .action-nitro:active {
+    background: rgba(0, 176, 255, 0.25);
+    box-shadow: 0 0 24px rgba(0, 176, 255, 0.7);
+    transform: scale(0.92);
 }
 
-/* NITRO button — cyan accent */
-.mb-nitro {
-    width: 72px; height: 68px;
-    border-color: rgba(0,220,255,0.55);
+/* Jump Button — Green Accent */
+.action-jump {
+    border: 2px solid #00e676;
+    box-shadow: 0 0 16px rgba(0, 230, 118, 0.35);
 }
-.mb-nitro.active, .mb-nitro:active {
-    background: rgba(0,220,255,0.2);
-    box-shadow: 0 0 24px rgba(0,220,255,0.6);
-    border-color: #00dcff;
-}
-
-/* DRIFT button — orange accent */
-.mb-drift {
-    width: 72px; height: 68px;
-    border-color: rgba(255,140,0,0.55);
-}
-.mb-drift span { color: #ffa500; }
-.mb-drift.active, .mb-drift:active {
-    background: rgba(255,140,0,0.18);
-    box-shadow: 0 0 24px rgba(255,140,0,0.6);
-    border-color: #ffa500;
+.action-jump .btn-icon, .action-jump .btn-label { color: #00e676; }
+.action-jump.active, .action-jump:active {
+    background: rgba(0, 230, 118, 0.25);
+    box-shadow: 0 0 24px rgba(0, 230, 118, 0.7);
+    transform: scale(0.92);
 }
 
-/* ─── Responsive: smaller screens ─── */
-@media (max-width: 480px) {
-    .joystick-base { width: 110px; height: 110px; }
-    .joystick-thumb { width: 46px; height: 46px; }
-    .mb-jump  { width: 90px;  height: 76px; font-size: 24px; }
-    .mb-nitro, .mb-drift { width: 62px; height: 58px; }
-    .mobile-ui { padding: 10px 14px 18px; }
+/* Fly Button — Gold/Orange Accent */
+.action-fly {
+    border: 2px solid #ffab00;
+    box-shadow: 0 0 16px rgba(255, 171, 0, 0.35);
+}
+.action-fly .btn-icon, .action-fly .btn-label { color: #ffab00; }
+.action-fly.active, .action-fly:active {
+    background: rgba(255, 171, 0, 0.25);
+    box-shadow: 0 0 24px rgba(255, 171, 0, 0.7);
+    transform: scale(0.92);
+}
+
+/* ─── Responsive Adjustments for Tablets & Mobile Screens ─── */
+@media (max-width: 600px), (max-height: 480px) {
+    .hud-circle-btn { width: 44px; height: 44px; font-size: 18px; }
+    .joystick-base { width: 105px; height: 105px; }
+    .joystick-thumb { width: 44px; height: 44px; }
+    .action-btn { width: 50px; height: 50px; min-width: 44px; min-height: 44px; }
+    .action-btn .btn-icon { font-size: 16px; }
+    .action-btn .btn-label { font-size: 7px; margin-top: 2px; }
+    .action-buttons-group { gap: 8px; }
+    .speedo-pill { padding: 6px 16px; min-width: 120px; }
+    .speed-num { font-size: 22px; }
+    .speed-unit { font-size: 10px; }
+    .coin-badge { font-size: 11px; margin-left: 8px; padding-left: 8px; }
 }
 
