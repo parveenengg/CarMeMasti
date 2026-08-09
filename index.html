@@ -152,13 +152,11 @@
 <!-- always-hidden = user disabled; hidden = game not running -->
 <div id="mobile-controls" class="mobile-ui always-hidden hidden">
 
-    <!-- LEFT: D-pad -->
-    <div class="dpad-zone">
-        <button id="m-fwd"   class="mb mb-fwd">▲<span>GAS</span></button>
-        <div class="dpad-row">
-            <button id="m-left"  class="mb mb-left">◄</button>
-            <button id="m-bwd"   class="mb mb-bwd">▼<span>BRK</span></button>
-            <button id="m-right" class="mb mb-right">►</button>
+    <!-- LEFT: Virtual Joystick -->
+    <div id="joystick-container" class="joystick-zone">
+        <div id="joystick-base" class="joystick-base">
+            <div id="joystick-thumb" class="joystick-thumb"></div>
+            <div class="joystick-label">DRIVE &amp; STEER</div>
         </div>
     </div>
 

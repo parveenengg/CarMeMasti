@@ -134,6 +134,9 @@ class GameEngine {
         // Input
         this.input = { fwd:false, bwd:false, left:false, right:false,
                        drift:false, nitro:false, thrust:false };
+        this.joystickActive = false;
+        this.joystickNormX  = 0;
+        this.joystickNormY  = 0;
         this._ctrl = 'both';  // 'both' | 'wasd' | 'arrows'
 
         // Camera
@@ -664,14 +667,8 @@ class GameEngine {
 
     // ── MOBILE / TABLET ON-SCREEN CONTROLS ─────────────────
     _bindMobileControls() {
-        const mc = document.getElementById('mobile-controls');
-
-        // Map button-id → which input flag to set
+        // Map action button-id → input flag
         const btnMap = {
-            'm-fwd':   'fwd',
-            'm-bwd':   'bwd',
-            'm-left':  'left',
-            'm-right': 'right',
             'm-jump':  'thrust',
             'm-nitro': 'nitro',
             'm-drift': 'drift'
@@ -696,14 +693,132 @@ class GameEngine {
             el.addEventListener('touchstart', down, { passive: false });
             el.addEventListener('touchend',   up,   { passive: false });
             el.addEventListener('touchcancel',up,   { passive: false });
-            // Also mouse for testing on desktop
             el.addEventListener('mousedown',  down);
             el.addEventListener('mouseup',    up);
             el.addEventListener('mouseleave', up);
         });
 
-        // Camera drag on the canvas must NOT fire when touching control buttons
-        // (already handled since control buttons call preventDefault)
+        // ── VIRTUAL JOYSTICK BINDING ──
+        const joyBase  = document.getElementById('joystick-base');
+        const joyThumb = document.getElementById('joystick-thumb');
+
+        if (joyBase && joyThumb) {
+            let joyTouchId = null;
+            let baseRect   = null;
+            let isMouseDown= false;
+
+            const updateJoystick = (clientX, clientY) => {
+                if (!baseRect) baseRect = joyBase.getBoundingClientRect();
+                const centerX = baseRect.left + baseRect.width / 2;
+                const centerY = baseRect.top + baseRect.height / 2;
+
+                const deltaX = clientX - centerX;
+                const deltaY = clientY - centerY;
+                const dist   = Math.hypot(deltaX, deltaY);
+                const maxR   = (baseRect.width / 2) - 10;
+                const angle  = Math.atan2(deltaY, deltaX);
+                const clampedR = Math.min(dist, maxR);
+
+                const knobX = Math.cos(angle) * clampedR;
+                const knobY = Math.sin(angle) * clampedR;
+
+                joyThumb.style.transform = `translate(${knobX}px, ${knobY}px)`;
+
+                this.joystickActive = true;
+                this.joystickNormX  = knobX / maxR; // -1 (left) to +1 (right)
+                this.joystickNormY  = knobY / maxR; // -1 (up/fwd) to +1 (down/bwd)
+
+                // Forward / Backward throttle
+                if (this.joystickNormY < -0.18) {
+                    this.input.fwd = true;  this.input.bwd = false;
+                } else if (this.joystickNormY > 0.18) {
+                    this.input.fwd = false; this.input.bwd = true;
+                } else {
+                    this.input.fwd = false; this.input.bwd = false;
+                }
+
+                // Left / Right steering fallback
+                if (this.joystickNormX < -0.18) {
+                    this.input.left = true;  this.input.right = false;
+                } else if (this.joystickNormX > 0.18) {
+                    this.input.left = false; this.input.right = true;
+                } else {
+                    this.input.left = false; this.input.right = false;
+                }
+            };
+
+            const resetJoystick = () => {
+                joyTouchId = null;
+                baseRect   = null;
+                isMouseDown= false;
+                joyThumb.style.transform = 'translate(0px, 0px)';
+                this.joystickActive = false;
+                this.joystickNormX  = 0;
+                this.joystickNormY  = 0;
+                this.input.fwd = false;
+                this.input.bwd = false;
+                this.input.left = false;
+                this.input.right = false;
+            };
+
+            const handleStart = e => {
+                e.preventDefault();
+                this.audio.init();
+                const touch = e.changedTouches ? e.changedTouches[0] : e;
+                if (e.changedTouches) joyTouchId = touch.identifier;
+                baseRect = joyBase.getBoundingClientRect();
+                updateJoystick(touch.clientX, touch.clientY);
+            };
+
+            const handleMove = e => {
+                if (!this.joystickActive && joyTouchId === null && !isMouseDown) return;
+                let touch = null;
+                if (e.changedTouches) {
+                    for (let i = 0; i < e.changedTouches.length; i++) {
+                        if (e.changedTouches[i].identifier === joyTouchId) {
+                            touch = e.changedTouches[i];
+                            break;
+                        }
+                    }
+                } else if (isMouseDown) {
+                    touch = e;
+                }
+                if (touch) {
+                    e.preventDefault();
+                    updateJoystick(touch.clientX, touch.clientY);
+                }
+            };
+
+            const handleEnd = e => {
+                if (e.changedTouches && joyTouchId !== null) {
+                    let matches = false;
+                    for (let i = 0; i < e.changedTouches.length; i++) {
+                        if (e.changedTouches[i].identifier === joyTouchId) {
+                            matches = true; break;
+                        }
+                    }
+                    if (!matches) return;
+                }
+                e.preventDefault();
+                resetJoystick();
+            };
+
+            joyBase.addEventListener('touchstart', handleStart, { passive: false });
+            window.addEventListener('touchmove', handleMove, { passive: false });
+            window.addEventListener('touchend', handleEnd, { passive: false });
+            window.addEventListener('touchcancel', handleEnd, { passive: false });
+
+            joyBase.addEventListener('mousedown', e => {
+                isMouseDown = true;
+                handleStart(e);
+            });
+            window.addEventListener('mousemove', e => {
+                if (isMouseDown) handleMove(e);
+            });
+            window.addEventListener('mouseup', e => {
+                if (isMouseDown) resetJoystick();
+            });
+        }
     }
 
     _requestFullscreen() {
@@ -837,11 +952,13 @@ class GameEngine {
         }
 
         // ── STEERING ──
-        // A / ArrowLeft  → turn left  → heading decreases
-        // D / ArrowRight → turn right → heading increases
         let si = 0;
-        if (this.input.left)  si =  1;   // heading increases = turn left (A)
-        if (this.input.right) si = -1;   // heading decreases = turn right (D)
+        if (this.joystickActive && Math.abs(this.joystickNormX) > 0.05) {
+            si = -this.joystickNormX; // Smooth analog steering from virtual joystick
+        } else {
+            if (this.input.left)  si =  1;   // heading increases = turn left (A)
+            if (this.input.right) si = -1;   // heading decreases = turn right (D)
+        }
 
         const sRatio = Math.abs(this.speed) / this.MAX_SPD;
         const sAngle = this.STEER_MX * (1.0 - sRatio * 0.52);
