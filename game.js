@@ -706,9 +706,21 @@ class GameEngine {
         // (already handled since control buttons call preventDefault)
     }
 
+    _requestFullscreen() {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen().catch(() => {});
+        } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) {
+            elem.msRequestFullscreen();
+        }
+    }
+
     // ── GAME STATE ─────────────────────────────────────────
     _startGame() {
         this.audio.init();
+        this._requestFullscreen();
         this.state    = 'PLAYING';
         this.score    = 0; this.coins = 0; this.distance = 0;
         this.speed    = 0; this.steer = 0;
