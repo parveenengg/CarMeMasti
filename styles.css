@@ -130,13 +130,31 @@ body, html {
     touch-action: none;
 }
 
-/* ── Top Left: Menu Button ── */
+/* ── Top Left: Menu Button & Coin Badge ── */
 .hud-top-left {
     position: fixed;
     top: max(16px, env(safe-area-inset-top));
     left: max(16px, env(safe-area-inset-left));
     z-index: 35;
+    display: flex;
+    align-items: center;
+    gap: 12px;
     pointer-events: auto;
+}
+
+.coin-hud-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 24px;
+    background: rgba(10, 18, 14, 0.84);
+    border: 1.5px solid rgba(255, 234, 0, 0.45);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px; font-weight: 700;
+    color: #ffea00;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 14px rgba(255, 234, 0, 0.2);
 }
 
 /* ── Top Right: Settings & Fullscreen ── */
@@ -155,16 +173,19 @@ body, html {
 .hud-circle-btn {
     width: 48px; height: 48px;
     border-radius: 50%;
-    background: rgba(10, 18, 14, 0.82);
-    border: 1.5px solid rgba(255, 255, 255, 0.22);
+    background: rgba(10, 18, 14, 0.84);
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     color: #ffffff;
-    font-size: 20px;
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.45);
     transition: all 0.15s ease;
     -webkit-tap-highlight-color: transparent;
+}
+.hud-circle-btn svg {
+    display: block;
+    color: #ffffff;
 }
 .hud-circle-btn:hover, .hud-circle-btn:active {
     background: rgba(0, 230, 118, 0.25);
@@ -187,9 +208,9 @@ body, html {
 }
 .joystick-base {
     position: relative;
-    width: 126px; height: 126px;
+    width: 130px; height: 130px;
     border-radius: 50%;
-    background: rgba(10, 18, 14, 0.84);
+    background: rgba(10, 18, 14, 0.85);
     border: 2px solid rgba(0, 230, 118, 0.45);
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 0 16px rgba(0, 230, 118, 0.15);
@@ -198,18 +219,19 @@ body, html {
 }
 .j-arrow {
     position: absolute;
-    color: rgba(255, 255, 255, 0.45);
-    font-size: 10px;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 11px;
+    font-weight: 700;
     pointer-events: none;
 }
-.j-up    { top: 8px; }
-.j-down  { bottom: 8px; }
-.j-left  { left: 8px; }
-.j-right { right: 8px; }
+.j-up    { top: 9px; }
+.j-down  { bottom: 9px; }
+.j-left  { left: 9px; }
+.j-right { right: 9px; }
 
 .joystick-thumb {
     position: absolute;
-    width: 50px; height: 50px;
+    width: 52px; height: 52px;
     border-radius: 50%;
     background: radial-gradient(circle at 35% 35%, #00e676, #007744);
     border: 2px solid #ffffff;
@@ -218,7 +240,7 @@ body, html {
     transition: transform 0.03s ease-out;
 }
 
-/* ── Bottom Center: Speedometer Pill ── */
+/* ── Bottom Center: Speedometer Pill (Exact Reference Match) ── */
 .hud-bottom-center {
     position: fixed;
     bottom: max(20px, env(safe-area-inset-bottom));
@@ -229,40 +251,30 @@ body, html {
 }
 .speedo-pill {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: center;
     gap: 8px;
-    padding: 10px 24px;
+    padding: 10px 32px;
     border-radius: 30px;
-    background: rgba(10, 18, 14, 0.85);
-    border: 2px solid rgba(0, 230, 118, 0.55);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 0 14px rgba(0, 230, 118, 0.18);
-    min-width: 140px;
+    background: rgba(10, 18, 14, 0.88);
+    border: 2px solid rgba(0, 230, 118, 0.6);
+    border-bottom: 3.5px solid #00e676;
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 22px rgba(0, 230, 118, 0.4);
+    min-width: 150px;
 }
 .speed-num {
     font-family: 'Orbitron', sans-serif;
-    font-size: 28px; font-weight: 900;
+    font-size: 34px; font-weight: 900;
     color: #ffffff;
-    text-shadow: 0 0 12px rgba(0, 230, 118, 0.7);
+    text-shadow: 0 0 14px rgba(0, 230, 118, 0.8);
     line-height: 1;
 }
 .speed-unit {
     font-family: 'Orbitron', sans-serif;
-    font-size: 12px; font-weight: 700;
-    color: rgba(255, 255, 255, 0.85);
-    letter-spacing: 1.5px;
-}
-.coin-badge {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-family: 'Orbitron', sans-serif;
     font-size: 13px; font-weight: 700;
-    color: #ffea00;
-    margin-left: 12px;
-    padding-left: 12px;
-    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 1.5px;
 }
 
 /* ── Bottom Right: Action Buttons (Nitro, Jump, Fly) ── */
@@ -276,15 +288,15 @@ body, html {
 .action-buttons-group {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
 }
 
 .action-btn {
-    width: 60px; height: 60px;
-    min-width: 48px; min-height: 48px;
+    width: 68px; height: 68px;
+    min-width: 52px; min-height: 52px;
     border-radius: 50%;
-    background: rgba(10, 18, 14, 0.84);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    background: rgba(10, 18, 14, 0.86);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -295,64 +307,78 @@ body, html {
     transition: transform 0.08s, box-shadow 0.08s, background 0.08s;
 }
 .action-btn .btn-icon {
-    font-size: 19px;
-    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
 }
 .action-btn .btn-label {
     font-family: 'Orbitron', sans-serif;
-    font-size: 8px; font-weight: 700;
-    letter-spacing: 1px;
+    font-size: 8.5px; font-weight: 900;
+    letter-spacing: 1.2px;
     margin-top: 3px;
+    color: #ffffff;
 }
 
-/* Nitro Button — Blue Accent */
+/* Nitro Button — Blue Glow */
 .action-nitro {
     border: 2px solid #00b0ff;
-    box-shadow: 0 0 16px rgba(0, 176, 255, 0.35);
+    box-shadow: 0 0 18px rgba(0, 176, 255, 0.45);
 }
-.action-nitro .btn-icon, .action-nitro .btn-label { color: #00b0ff; }
+.action-nitro .btn-icon svg { color: #00b0ff; fill: #00b0ff; }
 .action-nitro.active, .action-nitro:active {
-    background: rgba(0, 176, 255, 0.25);
-    box-shadow: 0 0 24px rgba(0, 176, 255, 0.7);
+    background: rgba(0, 176, 255, 0.28);
+    box-shadow: 0 0 28px rgba(0, 176, 255, 0.8);
     transform: scale(0.92);
 }
 
-/* Jump Button — Green Accent */
+/* Jump Button — Green Glow */
 .action-jump {
     border: 2px solid #00e676;
-    box-shadow: 0 0 16px rgba(0, 230, 118, 0.35);
+    box-shadow: 0 0 18px rgba(0, 230, 118, 0.45);
 }
-.action-jump .btn-icon, .action-jump .btn-label { color: #00e676; }
+.action-jump .btn-icon svg { color: #00e676; stroke: #00e676; }
 .action-jump.active, .action-jump:active {
-    background: rgba(0, 230, 118, 0.25);
-    box-shadow: 0 0 24px rgba(0, 230, 118, 0.7);
+    background: rgba(0, 230, 118, 0.28);
+    box-shadow: 0 0 28px rgba(0, 230, 118, 0.8);
     transform: scale(0.92);
 }
 
-/* Fly Button — Gold/Orange Accent */
+/* Fly Button — Amber Glow */
 .action-fly {
     border: 2px solid #ffab00;
-    box-shadow: 0 0 16px rgba(255, 171, 0, 0.35);
+    box-shadow: 0 0 18px rgba(255, 171, 0, 0.45);
 }
-.action-fly .btn-icon, .action-fly .btn-label { color: #ffab00; }
+.action-fly .btn-icon svg { color: #ffab00; stroke: #ffab00; }
 .action-fly.active, .action-fly:active {
-    background: rgba(255, 171, 0, 0.25);
-    box-shadow: 0 0 24px rgba(255, 171, 0, 0.7);
+    background: rgba(255, 171, 0, 0.28);
+    box-shadow: 0 0 28px rgba(255, 171, 0, 0.8);
     transform: scale(0.92);
 }
 
-/* ─── Responsive Adjustments for Tablets & Mobile Screens ─── */
-@media (max-width: 600px), (max-height: 480px) {
-    .hud-circle-btn { width: 44px; height: 44px; font-size: 18px; }
-    .joystick-base { width: 105px; height: 105px; }
-    .joystick-thumb { width: 44px; height: 44px; }
-    .action-btn { width: 50px; height: 50px; min-width: 44px; min-height: 44px; }
-    .action-btn .btn-icon { font-size: 16px; }
-    .action-btn .btn-label { font-size: 7px; margin-top: 2px; }
-    .action-buttons-group { gap: 8px; }
-    .speedo-pill { padding: 6px 16px; min-width: 120px; }
-    .speed-num { font-size: 22px; }
-    .speed-unit { font-size: 10px; }
-    .coin-badge { font-size: 11px; margin-left: 8px; padding-left: 8px; }
+/* ─── Mobile Portrait & Landscape Arrangement ─── */
+@media (max-width: 768px) {
+    .hud-circle-btn { width: 44px; height: 44px; }
+    .joystick-base { width: 110px; height: 110px; }
+    .joystick-thumb { width: 46px; height: 46px; }
+    
+    .action-btn { width: 56px; height: 56px; min-width: 44px; min-height: 44px; }
+    .action-btn .btn-icon svg { width: 18px; height: 18px; }
+    .action-btn .btn-label { font-size: 7.5px; margin-top: 2px; }
+    .action-buttons-group { gap: 10px; }
+    
+    .speedo-pill { padding: 8px 22px; min-width: 125px; }
+    .speed-num { font-size: 26px; }
+    .speed-unit { font-size: 11px; }
+    .coin-hud-badge { padding: 6px 12px; font-size: 12px; }
+}
+
+@media (max-width: 480px) {
+    /* Stack action buttons vertically on right side matching mobile layout graphic */
+    .action-buttons-group {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 10px;
+    }
 }
 
